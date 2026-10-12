@@ -1,4 +1,6 @@
-# NightHawk AI 🛡️🤖
+# NightHawk AI 🦅
+
+![NightHawk AI Showcase](nighthawk_showcase.jpg)
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com)
@@ -6,9 +8,7 @@
 [![NVIDIA NIM](https://img.shields.io/badge/AI-NVIDIA%20NIM%20GLM--5.3-76B900.svg)](https://build.nvidia.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**NightHawk AI** is an advanced, autonomous AI-powered security assessment, red-team penetration testing, blue-team defensive telemetry investigation, and Linux command-and-control platform.
-
-Engineered for security researchers, penetration testers, and DevSecOps engineers, NightHawk AI pairs local security orchestration with **NVIDIA NIM** reasoning models (`z-ai/glm-5.3` and `z-ai/glm-5.3-flash`) with robust latency fallback and execution safety guardrails.
+**NightHawk AI** is an autonomous cybersecurity assessment and tactical Linux terminal controller. Built for security researchers and pen-testers, it connects local pentesting workflows with **NVIDIA NIM** reasoning models (`z-ai/glm-5.3` and `z-ai/glm-5.3-flash`) through an automatic fallback system and execution safety guardrails.
 
 ---
 
