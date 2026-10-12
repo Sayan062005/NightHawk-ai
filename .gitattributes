@@ -1,4 +1,4 @@
-# GitHub Linguist language detection overrides
+# NightHawk AI — GitHub Linguist language detection overrides
 frontend/package-lock.json linguist-generated
 *.json linguist-generated
 *.svg linguist-generated
