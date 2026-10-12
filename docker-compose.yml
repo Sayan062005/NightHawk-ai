@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # NightHawk AI - Backend Security Engine
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nighthawk-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=NightHawk AI
+      - APP_ENV=production
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY:-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}
+      - NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
+      - NVIDIA_MODEL=z-ai/glm-5.3
+      - AI_PROVIDER=nvidia
+      - DATABASE_URL=sqlite+aiosqlite:///./data/nighthawk.db
+    volumes:
+      - nighthawk_data:/app/data
+    restart: unless-stopped
+    networks:
+      - nighthawk-net
+
+  # NightHawk AI - Reactive SOC Dashboard
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nighthawk-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - nighthawk-net
+
+  # NightHawk AI - Dedicated Linux Target & Autonomous Controller Sandbox
+  linux-server:
+    image: debian:bookworm-slim
+    container_name: nighthawk-linux-server
+    command: >
+      /bin/bash -c "
+      apt-get update &&
+      apt-get install -y python3 curl procps iproute2 net-tools jq nmap &&
+      echo '[+] Linux Server Sandbox Ready for NightHawk AI' &&
+      tail -f /dev/null
+      "
+    volumes:
+      - ./nighthawk_linux_controller.sh:/app/nighthawk_linux_controller.sh:ro
+      - ./nighthawk_linux_agent.py:/app/nighthawk_linux_agent.py:ro
+    working_dir: /app
+    environment:
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY:-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}
+    restart: unless-stopped
+    networks:
+      - nighthawk-net
+
+networks:
+  nighthawk-net:
+    driver: bridge
+
+volumes:
+  nighthawk_data:
