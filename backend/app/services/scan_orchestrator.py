@@ -233,7 +233,7 @@ class ScanOrchestrator:
                         owasp_category=f_data.get("owasp_category", ""),
                         cvss_score=f_data.get("cvss_score"),
                         cvss_vector=f_data.get("cvss_vector", ""),
-                        detection_source=f_data.get("detection_source", "sentinel_scanner"),
+                        detection_source=f_data.get("detection_source", "nighthawk_scanner"),
                         reproduction_steps=f_data.get("reproduction_steps", ""),
                         impact_analysis=f_data.get("impact_analysis", ""),
                         remediation_guidance=f_data.get("remediation_guidance", ""),

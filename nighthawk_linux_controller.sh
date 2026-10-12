@@ -150,7 +150,7 @@ if command -v python3 &>/dev/null; then
         exec python3 "$PYTHON_AGENT" "${PY_ARGS[@]}"
     else
         # Extract embedded Python agent into temporary file and execute
-        TMP_AGENT=$(mktemp /tmp/sentinel_agent_XXXXXX.py)
+        TMP_AGENT=$(mktemp /tmp/nighthawk_agent_XXXXXX.py)
         trap 'rm -f "$TMP_AGENT"' EXIT
         
         # Extract Python code embedded at bottom of this script

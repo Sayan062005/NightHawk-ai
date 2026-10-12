@@ -32,7 +32,7 @@ async def auth_client(client: AsyncClient):
     # Register a user
     resp = await client.post("/api/v1/auth/register", json={
         "username": "testadmin",
-        "email": "test@sentinel.local",
+        "email": "test@nighthawk.local",
         "password": "TestPassword123!",
     })
     assert resp.status_code == 201

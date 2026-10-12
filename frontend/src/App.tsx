@@ -620,7 +620,7 @@ export default function App() {
 
   // Check existing session
   useEffect(() => {
-    const token = localStorage.getItem('sentinel_token');
+    const token = localStorage.getItem('nighthawk_token');
     if (token) {
       api.getMe()
         .then(u => setUser(u))

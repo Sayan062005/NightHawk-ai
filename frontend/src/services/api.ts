@@ -13,19 +13,19 @@ class ApiService {
 
   setToken(token: string) {
     this.token = token;
-    localStorage.setItem('sentinel_token', token);
+    localStorage.setItem('nighthawk_token', token);
   }
 
   getToken(): string | null {
     if (!this.token) {
-      this.token = localStorage.getItem('sentinel_token');
+      this.token = localStorage.getItem('nighthawk_token');
     }
     return this.token;
   }
 
   clearToken() {
     this.token = null;
-    localStorage.removeItem('sentinel_token');
+    localStorage.removeItem('nighthawk_token');
   }
 
   private async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
