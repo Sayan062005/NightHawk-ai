@@ -49,3 +49,12 @@ logs/
 
 # Evidence (may contain sensitive data)
 evidence_store/
+
+# Tool Binaries (downloaded locally)
+backend/tools_bin/*.exe
+backend/tools_bin/*.zip
+backend/tools_bin/README*.md
+backend/tools_bin/LICENSE.md
+*.exe
+
+

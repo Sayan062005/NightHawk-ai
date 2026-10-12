@@ -118,9 +118,26 @@ class ExecutionBroker:
     def __init__(self):
         self._tool_paths: dict[str, str] = {}
         self._tool_versions: dict[str, str] = {}
+        self._ensure_path_configured()
+
+    def _ensure_path_configured(self):
+        """Ensure local project binary directories and tool paths are in os.environ['PATH']."""
+        base_dir = Path(__file__).resolve().parent.parent.parent
+        tools_bin = str(base_dir / "tools_bin")
+        venv_scripts = str(base_dir / ".venv" / "Scripts")
+        venv_bin = str(base_dir / ".venv" / "bin")
+        nmap_x86 = r"C:\Program Files (x86)\Nmap"
+        nmap_x64 = r"C:\Program Files\Nmap"
+
+        candidates = [tools_bin, venv_scripts, venv_bin, nmap_x86, nmap_x64]
+        current_path = os.environ.get("PATH", "")
+        paths_to_add = [c for c in candidates if os.path.isdir(c) and c not in current_path]
+        if paths_to_add:
+            os.environ["PATH"] = os.pathsep.join(paths_to_add) + os.pathsep + current_path
 
     async def detect_tools(self) -> dict[str, dict[str, Any]]:
         """Detect available tools and their versions."""
+        self._ensure_path_configured()
         inventory = {}
         for tool_name, tool_info in ALLOWED_TOOLS.items():
             binary = tool_info["binary"]
@@ -140,15 +157,20 @@ class ExecutionBroker:
                 self._tool_paths[tool_name] = path
                 # Try to get version
                 try:
+                    flag = "-version" if tool_name == "nuclei" else "--version"
                     proc = await asyncio.create_subprocess_exec(
-                        path, "--version",
+                        path, flag,
                         stdout=asyncio.subprocess.PIPE,
                         stderr=asyncio.subprocess.PIPE,
                     )
                     stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=10)
                     version_text = (stdout or stderr or b"").decode("utf-8", errors="replace")
-                    # Extract first line as version
-                    first_line = version_text.strip().split("\n")[0] if version_text.strip() else ""
+                    # Clean ANSI escape sequences
+                    import re
+                    version_text = re.sub(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])", "", version_text)
+                    # Extract first non-empty line as version
+                    lines = [ln.strip() for ln in version_text.splitlines() if ln.strip()]
+                    first_line = lines[0] if lines else ""
                     tool_data["version"] = first_line[:200]
                     self._tool_versions[tool_name] = first_line[:200]
                 except Exception:
