@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Remediation & Verification Agent.
+"""NightHawk AI — Remediation & Verification Agent.
 
 Analyzes security findings to synthesize:
 - Targeted remediation patches and code diffs
@@ -24,7 +24,7 @@ class RemediationAgent(BaseAgent):
         )
 
     def get_system_prompt(self) -> str:
-        return """You are the SentinelWeb AI Remediation & Hardening Specialist.
+        return """You are the NightHawk AI Remediation & Hardening Specialist.
 Your mission is to provide professional, robust, and copy-pasteable security fixes for discovered vulnerabilities.
 For every finding:
 1. Provide the root cause analysis.

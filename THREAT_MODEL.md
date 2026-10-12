@@ -1,4 +1,4 @@
-# SentinelWeb AI — Threat Model
+# NightHawk AI — Threat Model
 
 ## Assets
 

@@ -1,4 +1,4 @@
-"""SentinelWeb AI — SQLAlchemy database models."""
+"""NightHawk AI — SQLAlchemy database models."""
 
 from __future__ import annotations
 

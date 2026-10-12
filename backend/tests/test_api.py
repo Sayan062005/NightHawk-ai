@@ -1,4 +1,4 @@
-"""SentinelWeb AI — API integration tests."""
+"""NightHawk AI — API integration tests."""
 
 import pytest
 import pytest_asyncio

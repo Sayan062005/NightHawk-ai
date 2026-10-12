@@ -2,10 +2,10 @@
 
 ## Reporting Vulnerabilities
 
-If you discover a security vulnerability in SentinelWeb AI, please report it responsibly:
+If you discover a security vulnerability in NightHawk AI, please report it responsibly:
 
 1. **Do NOT** open a public GitHub issue for security vulnerabilities.
-2. Email: security@sentinelweb.example (placeholder — update before public release)
+2. Email: security@nighthawk.example (placeholder — update before public release)
 3. Include: description, reproduction steps, impact assessment, and suggested fix if available.
 4. We will acknowledge receipt within 48 hours and provide a timeline for resolution.
 

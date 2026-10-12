@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Database engine and session management."""
+"""NightHawk AI — Database engine and session management."""
 
 from __future__ import annotations
 

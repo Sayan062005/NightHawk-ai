@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SentinelWeb AI - Autonomous Linux Command & Control Agent
+NightHawk AI - Autonomous Linux Command & Control Agent
 Powered by NVIDIA NIM (z-ai/glm-5.3 with automatic z-ai/glm-5.3-flash fallback)
 
 Zero external dependencies required (uses Python standard library).
@@ -76,19 +76,20 @@ class Colors:
 def print_banner():
     banner = rf"""{Colors.CYAN}{Colors.BOLD}
   +===================================================================+
-  |    ____             __  _            __ _       __     __         |
-  |   / __/___ ___  __ / /_(_)__  ___ ___/ /| |     / /__  / /         |
-  |  _\ \/ -_) _ \/ // / __/ / _ \/ -_) _  / | | /| / / -_)/ _ \        |
-  | /___/\__/_//_/\_,_/\__/_/_//_/\__/\_,_/  |__/|__/\__//_.__/        |
+  |    _  ___       __   __  __              __      ___   ____       |
+  |   / |/ (_)___ _/ /  / / / /___ __    __ / /__   / _ | /  _/       |
+  |  /    / / _ `/ _ \/ /_/ / _ `/ |/|/ //  '_/  / __ |_/ /        |
+  | /_/|_/_/\_, /_//_/\____/\_,_/|__,__//_/\_\  /_/ |_/___/        |
+  |        /___/                                                      |
   |                                                                   |
-  |       AUTONOMOUS LINUX AGENT & SYSTEM CONTROLLER [AI-C2]          |
+  |       AUTONOMOUS LINUX RECON & SYSTEM CONTROLLER [AI-C2]          |
   |          Engine: NVIDIA NIM (z-ai/glm-5.3 + Flash Fallback)        |
   +===================================================================+{Colors.RESET}
 """
     try:
         print(banner)
     except Exception:
-        print("=== SENTINELWEB AI LINUX CONTROLLER ===")
+        print("=== NIGHTHAWK AI LINUX CONTROLLER ===")
 
 
 
@@ -140,7 +141,7 @@ class NvidiaNIMClient:
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
                     "Content-Type": "application/json",
-                    "User-Agent": "SentinelWeb-LinuxAgent/1.0"
+                    "User-Agent": "NightHawk-LinuxAgent/1.0"
                 },
                 method="POST"
             )
@@ -263,7 +264,7 @@ class AutonomousLinuxAgent:
         tools = ", ".join(self.env.get("available_tools", []))
         cwd = self.env.get("cwd", "/root")
 
-        return f"""You are SentinelWeb AI Linux Controller — an elite autonomous AI system administrator, penetration tester, and DevOps automation agent.
+        return f"""You are NightHawk AI Linux Controller — an elite autonomous AI system administrator, penetration tester, and DevOps automation agent.
 You have direct terminal execution access to this Linux host.
 
 Host Telemetry:
@@ -522,12 +523,12 @@ def interactive_repl(agent: AutonomousLinuxAgent):
 
     while True:
         try:
-            prompt_str = f"{Colors.CYAN}sentinel-ai{Colors.RESET}@{Colors.MAGENTA}linux{Colors.RESET}:{Colors.BLUE}{os.getcwd()}{Colors.RESET}$ "
+            prompt_str = f"{Colors.CYAN}nighthawk-ai{Colors.RESET}@{Colors.MAGENTA}linux{Colors.RESET}:{Colors.BLUE}{os.getcwd()}{Colors.RESET}$ "
             goal = input(prompt_str).strip()
             if not goal:
                 continue
             if goal.lower() in ("exit", "quit", "q"):
-                print(f"{Colors.GREEN}Exiting SentinelWeb Linux Controller. Goodbye!{Colors.RESET}")
+                print(f"{Colors.GREEN}Exiting NightHawk Linux Controller. Goodbye!{Colors.RESET}")
                 break
             if goal.lower() == "clear":
                 os.system("clear" if os.name != "nt" else "cls")
@@ -545,7 +546,7 @@ def interactive_repl(agent: AutonomousLinuxAgent):
 # ---------------------------------------------------------------------------
 def main():
     parser = argparse.ArgumentParser(
-        description="SentinelWeb AI - Autonomous Linux Controller powered by NVIDIA NIM (z-ai/glm-5.3 with Flash Fallback)"
+        description="NightHawk AI - Autonomous Linux Controller powered by NVIDIA NIM (z-ai/glm-5.3 with Flash Fallback)"
     )
     parser.add_argument("goal", nargs="?", default=None, help="The goal or task for the AI to execute on Linux")
     parser.add_argument("-y", "--auto", action="store_true", help="Autonomous mode: execute commands without manual confirmation")

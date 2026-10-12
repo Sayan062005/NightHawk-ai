@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Scan Orchestration Service.
+"""NightHawk AI — Scan Orchestration Service.
 
 Manages end-to-end vulnerability scanning lifecycle:
 - Validates targets against engagement scope

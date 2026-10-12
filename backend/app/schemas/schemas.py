@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Pydantic API schemas."""
+"""NightHawk AI — Pydantic API schemas."""
 
 from __future__ import annotations
 

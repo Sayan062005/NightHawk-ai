@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Base Agent Class.
+"""NightHawk AI — Base Agent Class.
 
 All AI agents inherit from BaseAgent. Agents operate with:
 - Strict token budgets
@@ -20,7 +20,7 @@ logger = get_logger(__name__)
 
 
 class BaseAgent(abc.ABC):
-    """Abstract base class for all SentinelWeb AI agents."""
+    """Abstract base class for all NightHawk AI agents."""
 
     def __init__(self, name: str, role: str, max_tokens: int = 4000):
         self.name = name

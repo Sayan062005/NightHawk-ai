@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Security Assessment Report Generator.
+"""NightHawk AI — Security Assessment Report Generator.
 
 Generates professional, publication-grade penetration testing reports
 in Markdown, HTML, and JSON formats for executive stakeholders and engineering teams.
@@ -35,7 +35,7 @@ class ReportGenerator:
         total_risk_score = min(100.0, (crit_count * 25.0 + high_count * 15.0 + med_count * 5.0 + low_count * 2.0))
 
         md = []
-        md.append(f"# SentinelWeb AI — Security Assessment Report")
+        md.append(f"# NightHawk AI — Security Assessment Report")
         md.append(f"**Target Engagement:** {engagement.name}")
         md.append(f"**Date Generated:** {now_str}")
         md.append(f"**Operating Profile:** `{engagement.operating_profile.value.upper()}`")
@@ -45,7 +45,7 @@ class ReportGenerator:
         md.append("## 1. Executive Summary\n")
         md.append(
             f"An automated and intelligence-guided security assessment of **{engagement.name}** was performed by the "
-            f"SentinelWeb AI platform. A total of **{len(findings)} finding(s)** were identified across "
+            f"NightHawk AI platform. A total of **{len(findings)} finding(s)** were identified across "
             f"authorized target assets."
         )
         md.append("\n### Severity Breakdown\n")
@@ -84,7 +84,7 @@ class ReportGenerator:
                     md.append(f"- **OWASP Category:** {f.owasp_category}")
                 if f.cvss_score:
                     md.append(f"- **CVSS v3.1 Base Score:** `{f.cvss_score}` ({f.cvss_vector or 'N/A'})")
-                md.append(f"- **Detection Source:** `{f.detection_source or 'sentinelweb'}`")
+                md.append(f"- **Detection Source:** `{f.detection_source or 'nighthawk'}`")
                 md.append(f"\n#### Technical Description\n{f.description or 'No description provided.'}\n")
 
                 if f.reproduction_steps:
@@ -101,7 +101,7 @@ class ReportGenerator:
         md.append("## 4. Remediation Roadmap\n")
         md.append("1. **Phase 1 (Immediate / < 48 Hours):** Address all Critical and High severity findings. Rotate any exposed tokens or credentials.")
         md.append("2. **Phase 2 (Short-Term / < 14 Days):** Implement missing security headers (HSTS, CSP, X-Frame-Options) and secure cookie attributes.")
-        md.append("3. **Phase 3 (Continuous):** Establish automated regression testing and integrate SentinelWeb AI into continuous CI/CD pipelines.")
+        md.append("3. **Phase 3 (Continuous):** Establish automated regression testing and integrate NightHawk AI into continuous CI/CD pipelines.")
 
         return "\n".join(md)
 
@@ -109,7 +109,7 @@ class ReportGenerator:
     async def generate_html_report(cls, engagement: Engagement, findings: list[Finding]) -> str:
         """Generate self-contained HTML report with modern dark theme styling."""
         md_content = await cls.generate_markdown_report(engagement, findings)
-        title = f"SentinelWeb AI Report — {engagement.name}"
+        title = f"NightHawk AI Report — {engagement.name}"
         html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>

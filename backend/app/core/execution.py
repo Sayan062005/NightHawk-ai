@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Execution Broker.
+"""NightHawk AI — Execution Broker.
 
 Centralized, sandboxed subprocess execution for all security tools.
 The AI model never has direct shell access. All tool invocations go

@@ -1,1 +1,1 @@
-"""SentinelWeb AI — Package init files."""
+"""NightHawk AI — Package init files."""

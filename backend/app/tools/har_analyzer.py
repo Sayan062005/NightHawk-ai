@@ -1,4 +1,4 @@
-"""SentinelWeb AI — HTTP Archive (HAR) Security Analyzer.
+"""NightHawk AI — HTTP Archive (HAR) Security Analyzer.
 
 Parses and analyzes HTTP Archive files (.har) to discover:
 - Missing security headers across all endpoints

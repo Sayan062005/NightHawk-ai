@@ -1,4 +1,4 @@
-"""SentinelWeb AI — HTTP Archive (HAR) Upload & Analysis API routes."""
+"""NightHawk AI — HTTP Archive (HAR) Upload & Analysis API routes."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""SentinelWeb AI — API dependency injection."""
+"""NightHawk AI — API dependency injection."""
 
 from __future__ import annotations
 

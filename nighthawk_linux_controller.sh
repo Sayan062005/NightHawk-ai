@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# SentinelWeb AI - Standalone Autonomous Linux Controller & C2 Agent
+# NightHawk AI - Standalone Autonomous Linux Controller & C2 Agent
 # Powered by NVIDIA NIM: z-ai/glm-5.3 (with z-ai/glm-5.3-flash Fallback)
 # Target Environment: Kali Linux, Ubuntu, Debian, Arch, Fedora, WSL
 # ==============================================================================
@@ -41,12 +41,13 @@ GOAL=""
 print_banner() {
     cat << "EOF"
   +===================================================================+
-  |    ____             __  _            __ _       __     __         |
-  |   / __/___ ___  __ / /_(_)__  ___ ___/ /| |     / /__  / /         |
-  |  _\ \/ -_) _ \/ // / __/ / _ \/ -_) _  / | | /| / / -_)/ _ \        |
-  | /___/\__/_//_/\_,_/\__/_/_//_/\__/\_,_/  |__/|__/\__//_.__/        |
+  |    _  ___       __   __  __              __      ___   ____       |
+  |   / |/ (_)___ _/ /  / / / /___ __    __ / /__   / _ | /  _/       |
+  |  /    / / _ / _ \/ /_/ / _ / |/|/ //  '_/  / __ |_/ /        |
+  | /_/|_/_/\_, /_//_/\____/\_,_/|__,__//_/\_\  /_/ |_/___/        |
+  |        /___/                                                      |
   |                                                                   |
-  |       AUTONOMOUS LINUX AGENT & SYSTEM CONTROLLER [AI-C2]          |
+  |       AUTONOMOUS LINUX RECON & SYSTEM CONTROLLER [AI-C2]          |
   |          Engine: NVIDIA NIM (z-ai/glm-5.3 + Flash Fallback)        |
   +===================================================================+
 EOF
@@ -55,7 +56,7 @@ EOF
 show_help() {
     print_banner
     echo -e "${BOLD}USAGE:${NC}"
-    echo "  ./sentinel_linux_controller.sh [OPTIONS] [\"GOAL\"]"
+    echo "  ./nighthawk_linux_controller.sh [OPTIONS] [\"GOAL\"]"
     echo ""
     echo -e "${BOLD}OPTIONS:${NC}"
     echo "  -y, --auto            Autonomous mode (executes commands without asking)"
@@ -69,13 +70,13 @@ show_help() {
     echo ""
     echo -e "${BOLD}EXAMPLES:${NC}"
     echo "  # Interactive prompt:"
-    echo "  ./sentinel_linux_controller.sh"
+    echo "  ./nighthawk_linux_controller.sh"
     echo ""
     echo "  # Autonomous security audit:"
-    echo "  ./sentinel_linux_controller.sh -y \"Audit all listening ports and find running web servers\""
+    echo "  ./nighthawk_linux_controller.sh -y \"Audit all listening ports and find running web servers\""
     echo ""
     echo "  # Penetration test reconnaissance on Kali Linux:"
-    echo "  ./sentinel_linux_controller.sh -y \"Check SUID binaries and look for privilege escalation vectors\""
+    echo "  ./nighthawk_linux_controller.sh -y \"Check SUID binaries and look for privilege escalation vectors\""
     echo ""
 }
 
@@ -124,7 +125,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PYTHON_AGENT="$SCRIPT_DIR/sentinel_linux_agent.py"
+PYTHON_AGENT="$SCRIPT_DIR/nighthawk_linux_agent.py"
 
 # Check if Python 3 is available
 if command -v python3 &>/dev/null; then
@@ -144,7 +145,7 @@ if command -v python3 &>/dev/null; then
         PY_ARGS+=("$GOAL")
     fi
 
-    # If sentinel_linux_agent.py exists in same directory, execute directly
+    # If nighthawk_linux_agent.py exists in same directory, execute directly
     if [[ -f "$PYTHON_AGENT" ]]; then
         exec python3 "$PYTHON_AGENT" "${PY_ARGS[@]}"
     else
@@ -160,7 +161,7 @@ exit 0
 #__EMBEDDED_PYTHON_START__
 #!/usr/bin/env python3
 """
-SentinelWeb AI - Autonomous Linux Command & Control Agent
+NightHawk AI - Autonomous Linux Command & Control Agent
 Powered by NVIDIA NIM (z-ai/glm-5.3 with automatic z-ai/glm-5.3-flash fallback)
 
 Zero external dependencies required (uses Python standard library).
@@ -236,19 +237,20 @@ class Colors:
 def print_banner():
     banner = rf"""{Colors.CYAN}{Colors.BOLD}
   +===================================================================+
-  |    ____             __  _            __ _       __     __         |
-  |   / __/___ ___  __ / /_(_)__  ___ ___/ /| |     / /__  / /         |
-  |  _\ \/ -_) _ \/ // / __/ / _ \/ -_) _  / | | /| / / -_)/ _ \        |
-  | /___/\__/_//_/\_,_/\__/_/_//_/\__/\_,_/  |__/|__/\__//_.__/        |
+  |    _  ___       __   __  __              __      ___   ____       |
+  |   / |/ (_)___ _/ /  / / / /___ __    __ / /__   / _ | /  _/       |
+  |  /    / / _ `/ _ \/ /_/ / _ `/ |/|/ //  '_/  / __ |_/ /        |
+  | /_/|_/_/\_, /_//_/\____/\_,_/|__,__//_/\_\  /_/ |_/___/        |
+  |        /___/                                                      |
   |                                                                   |
-  |       AUTONOMOUS LINUX AGENT & SYSTEM CONTROLLER [AI-C2]          |
+  |       AUTONOMOUS LINUX RECON & SYSTEM CONTROLLER [AI-C2]          |
   |          Engine: NVIDIA NIM (z-ai/glm-5.3 + Flash Fallback)        |
   +===================================================================+{Colors.RESET}
 """
     try:
         print(banner)
     except Exception:
-        print("=== SENTINELWEB AI LINUX CONTROLLER ===")
+        print("=== NIGHTHAWK AI LINUX CONTROLLER ===")
 
 
 
@@ -300,7 +302,7 @@ class NvidiaNIMClient:
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
                     "Content-Type": "application/json",
-                    "User-Agent": "SentinelWeb-LinuxAgent/1.0"
+                    "User-Agent": "NightHawk-LinuxAgent/1.0"
                 },
                 method="POST"
             )
@@ -423,7 +425,7 @@ class AutonomousLinuxAgent:
         tools = ", ".join(self.env.get("available_tools", []))
         cwd = self.env.get("cwd", "/root")
 
-        return f"""You are SentinelWeb AI Linux Controller — an elite autonomous AI system administrator, penetration tester, and DevOps automation agent.
+        return f"""You are NightHawk AI Linux Controller — an elite autonomous AI system administrator, penetration tester, and DevOps automation agent.
 You have direct terminal execution access to this Linux host.
 
 Host Telemetry:
@@ -682,12 +684,12 @@ def interactive_repl(agent: AutonomousLinuxAgent):
 
     while True:
         try:
-            prompt_str = f"{Colors.CYAN}sentinel-ai{Colors.RESET}@{Colors.MAGENTA}linux{Colors.RESET}:{Colors.BLUE}{os.getcwd()}{Colors.RESET}$ "
+            prompt_str = f"{Colors.CYAN}nighthawk-ai{Colors.RESET}@{Colors.MAGENTA}linux{Colors.RESET}:{Colors.BLUE}{os.getcwd()}{Colors.RESET}$ "
             goal = input(prompt_str).strip()
             if not goal:
                 continue
             if goal.lower() in ("exit", "quit", "q"):
-                print(f"{Colors.GREEN}Exiting SentinelWeb Linux Controller. Goodbye!{Colors.RESET}")
+                print(f"{Colors.GREEN}Exiting NightHawk Linux Controller. Goodbye!{Colors.RESET}")
                 break
             if goal.lower() == "clear":
                 os.system("clear" if os.name != "nt" else "cls")
@@ -705,7 +707,7 @@ def interactive_repl(agent: AutonomousLinuxAgent):
 # ---------------------------------------------------------------------------
 def main():
     parser = argparse.ArgumentParser(
-        description="SentinelWeb AI - Autonomous Linux Controller powered by NVIDIA NIM (z-ai/glm-5.3 with Flash Fallback)"
+        description="NightHawk AI - Autonomous Linux Controller powered by NVIDIA NIM (z-ai/glm-5.3 with Flash Fallback)"
     )
     parser.add_argument("goal", nargs="?", default=None, help="The goal or task for the AI to execute on Linux")
     parser.add_argument("-y", "--auto", action="store_true", help="Autonomous mode: execute commands without manual confirmation")

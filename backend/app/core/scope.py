@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Scope Enforcement Service.
+"""NightHawk AI — Scope Enforcement Service.
 
 This is the primary security boundary. Every outbound network operation
 must pass through this service before execution. It validates targets

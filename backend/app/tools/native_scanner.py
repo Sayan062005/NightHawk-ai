@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Native Security Scanner.
+"""NightHawk AI — Native Security Scanner.
 
 Built-in Python security inspector that operates without requiring external
 binaries (such as Nmap, Nuclei, or testssl.sh). Serves as an immediate zero-dependency

@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Tests for HarAnalyzer, BlueTeamEngine, and ReportGenerator."""
+"""NightHawk AI — Tests for HarAnalyzer, BlueTeamEngine, and ReportGenerator."""
 
 import pytest
 from app.tools.har_analyzer import HarAnalyzer
@@ -66,7 +66,7 @@ def test_blueteam_engine_rules_and_scoring():
 
     waf = BlueTeamEngine.generate_waf_rule(finding)
     assert "SecRule REQUEST_URI \"@contains /api/v1/search\"" in waf
-    assert "msg:'SentinelWeb AI WAF Block:" in waf
+    assert "msg:'NightHawk AI WAF Block:" in waf
 
     nginx_conf = BlueTeamEngine.generate_nginx_hardening([finding])
     assert "add_header X-Frame-Options 'SAMEORIGIN'" in nginx_conf
@@ -96,10 +96,10 @@ async def test_report_generator():
     )
 
     md = await ReportGenerator.generate_markdown_report(engagement, [finding])
-    assert "# SentinelWeb AI — Security Assessment Report" in md
+    assert "# NightHawk AI — Security Assessment Report" in md
     assert "Acme Corp Pentest" in md
     assert "Missing Anti-Clickjacking Header" in md
 
     html = await ReportGenerator.generate_html_report(engagement, [finding])
     assert "<!DOCTYPE html>" in html
-    assert "SentinelWeb AI Report — Acme Corp Pentest" in html
+    assert "NightHawk AI Report — Acme Corp Pentest" in html

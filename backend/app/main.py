@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Main FastAPI application."""
+"""NightHawk AI — Main FastAPI application."""
 
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="SentinelWeb AI",
+    title="NightHawk AI",
     description="AI-Powered Red Team, Blue Team & Vulnerability Research Platform",
     version="0.1.0",
     lifespan=lifespan,
@@ -122,7 +122,7 @@ app.include_router(har_router, prefix=PREFIX)
 async def root():
     """Root endpoint."""
     return {
-        "name": "SentinelWeb AI",
+        "name": "NightHawk AI",
         "version": "0.1.0",
         "description": "AI-Powered Security Assessment Platform",
         "docs": "/api/docs",

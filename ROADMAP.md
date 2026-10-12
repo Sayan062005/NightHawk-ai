@@ -1,4 +1,4 @@
-# SentinelWeb AI — Roadmap
+# NightHawk AI — Roadmap
 
 ## Phase 1: Foundation ← CURRENT
 - [x] Repository inspection and environment analysis

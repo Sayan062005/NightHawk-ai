@@ -1,4 +1,4 @@
-"""SentinelWeb AI — AI Provider Layer.
+"""NightHawk AI — AI Provider Layer.
 
 Supports NVIDIA NIM, OpenAI-compatible, mock, and deterministic fallback.
 All AI output is advisory — the backend validates everything independently.

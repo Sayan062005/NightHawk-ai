@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Application Configuration."""
+"""NightHawk AI — Application Configuration."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     )
 
     # ─── Application ───
-    app_name: str = "SentinelWeb AI"
+    app_name: str = "NightHawk AI"
     app_env: str = "development"
     app_debug: bool = False
     app_host: str = "127.0.0.1"
@@ -41,7 +41,7 @@ class Settings(BaseSettings):
         return v
 
     # ─── Database ───
-    database_url: str = "sqlite+aiosqlite:///./sentinelweb.db"
+    database_url: str = "sqlite+aiosqlite:///./nighthawk.db"
 
     # ─── Auth ───
     jwt_secret_key: str = secrets.token_urlsafe(48)

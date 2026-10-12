@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Findings API routes."""
+"""NightHawk AI — Findings API routes."""
 
 from __future__ import annotations
 

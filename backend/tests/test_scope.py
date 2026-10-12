@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Scope Enforcement Service tests.
+"""NightHawk AI — Scope Enforcement Service tests.
 
 These tests verify the primary security boundary:
 - Approved targets are allowed

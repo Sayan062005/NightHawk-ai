@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Execution Broker tests.
+"""NightHawk AI — Execution Broker tests.
 
 Tests verify:
 - Dangerous arguments are blocked

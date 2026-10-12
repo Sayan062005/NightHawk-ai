@@ -67,7 +67,7 @@ export default function SettingsPage() {
           </div>
           <div>
             <span className="text-muted text-xs">Backend Engine:</span>
-            <div style={{ fontWeight: 600 }}>SentinelWeb Core v{health?.version || '0.1.0'}</div>
+            <div style={{ fontWeight: 600 }}>NightHawk Core v{health?.version || '0.1.0'}</div>
           </div>
           <div>
             <span className="text-muted text-xs">Security Tools Available:</span>

@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Blue Team Defensive Correlation Engine.
+"""NightHawk AI — Blue Team Defensive Correlation Engine.
 
 Translates vulnerability findings into actionable defensive countermeasures:
 - Sigma detection rules for SIEM correlation
@@ -30,7 +30,7 @@ status: experimental
 description: Detects traffic or requests attempting to exploit {clean_title} on affected route.
 references:
     - https://cwe.mitre.org/data/definitions/{finding.cwe_id.replace('CWE-', '') if finding.cwe_id else '16'}.html
-author: SentinelWeb AI Defensive Engine
+author: NightHawk AI Defensive Engine
 date: 2026/10/10
 tags:
     - attack.initial_access
@@ -53,14 +53,14 @@ level: {finding.severity.value if finding.severity else 'medium'}
         rule_id = 900000 + (abs(hash(finding.id)) % 99999)
         title_comment = finding.title.replace('"', "'")
 
-        waf = f"""# Rule ID: {rule_id} — SentinelWeb AI Virtual Patch
+        waf = f"""# Rule ID: {rule_id} — NightHawk AI Virtual Patch
 # Mitigation for: {title_comment} ({finding.cwe_id or 'General'})
 SecRule REQUEST_URI "@contains {finding.affected_route or '/'}" \\
     "id:{rule_id},\\
     phase:2,\\
     deny,\\
     status:403,\\
-    msg:'SentinelWeb AI WAF Block: Potential attack targeting {title_comment}',\\
+    msg:'NightHawk AI WAF Block: Potential attack targeting {title_comment}',\\
     log,\\
     severity:{'CRITICAL' if finding.severity == FindingSeverity.CRITICAL else 'WARNING'}"
 """
@@ -70,7 +70,7 @@ SecRule REQUEST_URI "@contains {finding.affected_route or '/'}" \\
     def generate_nginx_hardening(findings: list[Finding]) -> str:
         """Generate comprehensive Nginx security configuration snippet."""
         conf = [
-            "# SentinelWeb AI Recommended Nginx Hardening Baseline",
+            "# NightHawk AI Recommended Nginx Hardening Baseline",
             "# Paste into server {} block",
             "",
             "# Hide server version banner",

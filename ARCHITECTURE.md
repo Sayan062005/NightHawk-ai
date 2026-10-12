@@ -1,8 +1,8 @@
-# SentinelWeb AI — Architecture
+# NightHawk AI — Architecture
 
 ## Overview
 
-SentinelWeb AI is a modular, AI-augmented security assessment platform implementing a multi-agent architecture for continuous vulnerability research, red team/blue team operations, and remediation tracking.
+NightHawk AI is a modular, AI-augmented security assessment platform implementing a multi-agent architecture for continuous vulnerability research, red team/blue team operations, and remediation tracking.
 
 **Core Workflow:** Discover → Map → Test → Analyze → Verify → Correlate → Report → Remediate → Retest
 
@@ -52,7 +52,7 @@ SentinelWeb AI is a modular, AI-augmented security assessment platform implement
 ## Directory Structure
 
 ```
-sentinelweb/
+nighthawk/
 ├── backend/
 │   ├── alembic/                  # Database migrations
 │   ├── app/

@@ -139,7 +139,7 @@ function LoginPage({ onLogin }: { onLogin: (user: User) => void }) {
             <span style={{ width: 32, height: 32, color: 'white' }}>{icons.shield}</span>
           </div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
-            SentinelWeb AI
+            NightHawk AI
           </h1>
           <p style={{ color: '#94a3b8', marginTop: 4, fontSize: '0.875rem' }}>
             Security Assessment Platform
@@ -602,7 +602,7 @@ function PlaceholderPage({ title, icon }: { title: string; icon: React.ReactNode
       <span style={{ width: 64, height: 64, color: 'var(--text-muted)', display: 'inline-block' }}>{icon}</span>
       <h2 style={{ marginTop: 16, fontWeight: 600 }}>{title}</h2>
       <p className="text-muted text-sm" style={{ marginTop: 4, maxWidth: 400 }}>
-        This module is part of the SentinelWeb AI platform and will be fully operational when connected to the backend assessment engine.
+        This module is part of the NightHawk AI platform and will be fully operational when connected to the backend assessment engine.
       </p>
     </div>
   );
@@ -700,7 +700,7 @@ export default function App() {
             <span style={{ width: 16, height: 16, color: 'white' }}>{icons.shield}</span>
           </div>
           <span style={{ fontWeight: 700, fontSize: '1rem', letterSpacing: '-0.01em' }}>
-            SentinelWeb <span style={{ color: 'var(--accent-primary)' }}>AI</span>
+            NightHawk <span style={{ color: 'var(--accent-primary)' }}>AI</span>
           </span>
         </div>
 

@@ -1,5 +1,5 @@
 [project]
-name = "sentinelweb"
+name = "nighthawk"
 version = "0.1.0"
 description = "AI-Powered Red Team, Blue Team & Vulnerability Research Platform"
 requires-python = ">=3.11"

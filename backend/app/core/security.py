@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Authentication and security utilities."""
+"""NightHawk AI — Authentication and security utilities."""
 
 from __future__ import annotations
 

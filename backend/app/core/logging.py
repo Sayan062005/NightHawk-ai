@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Structured logging with secret redaction."""
+"""NightHawk AI — Structured logging with secret redaction."""
 
 from __future__ import annotations
 

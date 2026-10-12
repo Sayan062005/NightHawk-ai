@@ -1,4 +1,4 @@
-"""SentinelWeb AI — Orchestrator Agent.
+"""NightHawk AI — Orchestrator Agent.
 
 Controls the autonomous assessment lifecycle:
 - Assesses current engagement state
@@ -24,7 +24,7 @@ class OrchestratorAgent(BaseAgent):
         )
 
     def get_system_prompt(self) -> str:
-        return """You are the SentinelWeb AI Operations Orchestrator.
+        return """You are the NightHawk AI Operations Orchestrator.
 You oversee autonomous security assessments following the methodology:
 Discover → Map → Test → Analyze → Verify → Correlate → Report → Remediate.
 You ensure operations stay within authorized scope, budget, and operating profile limits (passive, active, lab).

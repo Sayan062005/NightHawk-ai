@@ -62,7 +62,7 @@ export default function BlueTeamPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `sentinelweb-report-${selectedEngId}.md`;
+      a.download = `nighthawk-report-${selectedEngId}.md`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err: any) {
