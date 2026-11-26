@@ -63,6 +63,17 @@ class RoleUpdate(BaseModel):
     role: str = Field(..., pattern=r"^(admin|operator|viewer)$")
 
 
+class PasswordReset(BaseModel):
+    new_password: str = Field(..., min_length=8, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def password_byte_limit(cls, value: str) -> str:
+        if len(value.encode("utf-8")) > 256:
+            raise ValueError("Password must be at most 256 UTF-8 bytes")
+        return value
+
+
 class TokenResponse(BaseModel):
     """Legacy response schema retained for non-browser integrations."""
     access_token: str
