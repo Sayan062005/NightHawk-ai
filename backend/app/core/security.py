@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime, timedelta, timezone
 import secrets
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import bcrypt
