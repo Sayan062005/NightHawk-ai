@@ -136,7 +136,7 @@ AUTH_COOKIE_SAMESITE=lax
 APP_CORS_ORIGINS=["http://localhost:5173"]
 ```
 
-For the first administrator, open **Create Account** and enter the `ADMIN_BOOTSTRAP_TOKEN` in the optional administrator bootstrap field. The bootstrap is single-use and protected by a database singleton claim. All ordinary registrations become **viewer** accounts. After the first administrator is created, remove `ADMIN_BOOTSTRAP_TOKEN` from the environment and restart the backend. An administrator can promote users through `PATCH /api/v1/auth/users/{user_id}/role`.
+For the first administrator, open **Create Account** and enter the `ADMIN_BOOTSTRAP_TOKEN` in the optional administrator bootstrap field. The bootstrap is single-use and protected by a database singleton claim. All ordinary registrations become **viewer** accounts. After the first administrator is created, remove `ADMIN_BOOTSTRAP_TOKEN` from the environment and restart the backend. An administrator can promote users through `PATCH /api/v1/auth/users/{user_id}/role` and reset passwords through `POST /api/v1/auth/users/{user_id}/password` (which revokes that user's refresh sessions). A previously issued access cookie can remain valid for at most its 15-minute lifetime.
 
 For production deployments:
 - Set `APP_ENV=production`, use HTTPS, and set `AUTH_COOKIE_SECURE=true`.
