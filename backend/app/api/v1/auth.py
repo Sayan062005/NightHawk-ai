@@ -24,7 +24,7 @@ from app.core.security import (
     verify_password,
 )
 from app.models.models import AdminBootstrapClaim, RefreshToken, User, UserRole
-from app.schemas.schemas import AuthResponse, LoginRequest, RoleUpdate, UserCreate, UserResponse
+from app.schemas.schemas import AuthResponse, LoginRequest, PasswordReset, RoleUpdate, UserCreate, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 ACCESS_COOKIE = "nighthawk_access"
@@ -254,6 +254,29 @@ async def logout(
 async def get_me(user: User = Depends(get_current_user)):
     """Get current user profile."""
     return UserResponse.model_validate(user)
+
+
+@router.post("/users/{user_id}/password")
+async def reset_user_password(
+    user_id: str,
+    body: PasswordReset,
+    admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Allow an administrator to reset a user's password and revoke refresh sessions."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    target = result.scalar_one_or_none()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    target.hashed_password = hash_password(body.new_password)
+    await db.execute(
+        update(RefreshToken)
+        .where(RefreshToken.user_id == user_id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(timezone.utc))
+    )
+    await db.flush()
+    return {"detail": "Password reset; existing refresh sessions have been revoked"}
 
 
 @router.patch("/users/{user_id}/role", response_model=UserResponse)
