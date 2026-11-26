@@ -139,6 +139,8 @@ APP_CORS_ORIGINS=["http://localhost:5173"]
 For the first administrator, open **Create Account** and enter the `ADMIN_BOOTSTRAP_TOKEN` in the optional administrator bootstrap field. The bootstrap is single-use and protected by a database singleton claim. All ordinary registrations become **viewer** accounts. After the first administrator is created, remove `ADMIN_BOOTSTRAP_TOKEN` from the environment and restart the backend. An administrator can promote users through `PATCH /api/v1/auth/users/{user_id}/role` and reset passwords through `POST /api/v1/auth/users/{user_id}/password` (which revokes that user's refresh sessions). A previously issued access cookie can remain valid for at most its 15-minute lifetime.
 
 For production deployments:
+- Serve the frontend and API on the same site/hostname (a reverse proxy routing `/api` to FastAPI is recommended); cookies are host-scoped. Do not mix `localhost` and `127.0.0.1` during local development.
+- Set `VITE_API_BASE_URL` at frontend build time when the API is not at the default `http://localhost:8000/api/v1`.
 - Set `APP_ENV=production`, use HTTPS, and set `AUTH_COOKIE_SECURE=true`.
 - Set `APP_CORS_ORIGINS` to the exact frontend origins; do not use wildcard origins with credentials.
 - Provide a stable `JWT_SECRET_KEY` of at least 32 bytes and keep it outside source control.
