@@ -9,6 +9,7 @@ import secrets
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import CSRF_COOKIE, validate_csrf, get_current_user, require_admin
 from app.core.config import get_settings
@@ -22,7 +23,7 @@ from app.core.security import (
     password_needs_rehash,
     verify_password,
 )
-from app.models.models import RefreshToken, User, UserRole
+from app.models.models import AdminBootstrapClaim, RefreshToken, User, UserRole
 from app.schemas.schemas import AuthResponse, LoginRequest, RoleUpdate, UserCreate, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -113,7 +114,16 @@ async def register(
         admin_count = await db.scalar(
             select(func.count(User.id)).where(User.role == UserRole.ADMIN)
         )
-        is_admin_bootstrap = (admin_count or 0) == 0
+        if (admin_count or 0) > 0:
+            raise HTTPException(status_code=409, detail="Administrator bootstrap has already been completed")
+        # The unique singleton claim makes simultaneous bootstrap attempts mutually exclusive.
+        db.add(AdminBootstrapClaim(id="initial-admin"))
+        try:
+            await db.flush()
+        except IntegrityError:
+            await db.rollback()
+            raise HTTPException(status_code=409, detail="Administrator bootstrap has already been claimed")
+        is_admin_bootstrap = True
 
     user = User(
         username=body.username,
