@@ -119,6 +119,15 @@ class User(Base):
     audit_events = relationship("AuditEvent", back_populates="user")
 
 
+class AdminBootstrapClaim(Base):
+    """Singleton record preventing concurrent first-admin bootstrap."""
+
+    __tablename__ = "admin_bootstrap_claims"
+
+    id = Column(String, primary_key=True)
+    created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
+
+
 class RefreshToken(Base):
     """Hashed, single-use refresh sessions for browser authentication."""
 
