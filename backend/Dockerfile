@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# 1. Install system utilities and Linux pentesting packages (nmap, whatweb, testssl, curl, jq)
+# Install system utilities and Linux security assessment tools.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     iproute2 \
@@ -21,33 +21,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Install Semgrep static code analysis tool
+# Install Semgrep static code analysis tool.
 RUN pip install --no-cache-dir semgrep
 
-# 3. Install Nuclei (ProjectDiscovery vulnerability scanner binary)
+# Install Nuclei (ProjectDiscovery) and OSV-Scanner (Google) on amd64.
 RUN ARCH=$(dpkg --print-architecture) && \
     if [ "$ARCH" = "amd64" ]; then \
-        curl -sL https://github.com/projectdiscovery/nuclei/releases/download/v3.3.8/nuclei_3.3.8_linux_amd64.zip -o /tmp/nuclei.zip && \
+        curl -fsSL https://github.com/projectdiscovery/nuclei/releases/download/v3.3.8/nuclei_3.3.8_linux_amd64.zip -o /tmp/nuclei.zip && \
         unzip -q /tmp/nuclei.zip -d /usr/local/bin nuclei && \
-        chmod +x /usr/local/bin/nuclei && \
-        rm /tmp/nuclei.zip; \
-    fi
-
-# 4. Install OSV-Scanner (Google dependency vulnerability scanner binary)
-RUN ARCH=$(dpkg --print-architecture) && \
-    if [ "$ARCH" = "amd64" ]; then \
-        curl -sL https://github.com/google/osv-scanner/releases/download/v1.9.2/osv-scanner_linux_amd64 -o /usr/local/bin/osv-scanner && \
+        chmod +x /usr/local/bin/nuclei && rm /tmp/nuclei.zip && \
+        curl -fsSL https://github.com/google/osv-scanner/releases/download/v1.9.2/osv-scanner_linux_amd64 -o /usr/local/bin/osv-scanner && \
         chmod +x /usr/local/bin/osv-scanner; \
     fi
 
-# 5. Copy configuration and install python dependencies
-COPY pyproject.toml .
-RUN pip install --no-cache-dir -e .
+# Copy application source before installing the package so setuptools can
+# discover the explicitly configured app package.
+COPY pyproject.toml ./
+COPY app/ ./app/
+RUN pip install --no-cache-dir .
 
-# 6. Copy application source code
-COPY app/ app/
-COPY tests/ tests/
+COPY tests/ ./tests/
 
 EXPOSE 8000
-
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
