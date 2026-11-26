@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_current_user, require_operator
+from app.api.deps import require_engagement_access, require_operator_engagement
 from app.core.database import get_db
 from app.models.models import Engagement, Finding, FindingEvidence, User
 from app.schemas.schemas import FindingCreate, FindingResponse, FindingUpdate
@@ -22,7 +22,7 @@ async def list_findings(
     engagement_id: str,
     severity: str | None = Query(None),
     finding_status: str | None = Query(None, alias="status"),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_engagement_access),
     db: AsyncSession = Depends(get_db),
 ):
     """List findings for an engagement with optional filters."""
@@ -43,7 +43,7 @@ async def list_findings(
 async def create_finding(
     engagement_id: str,
     body: FindingCreate,
-    user: User = Depends(require_operator),
+    user: User = Depends(require_operator_engagement),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new finding."""
@@ -80,7 +80,7 @@ async def create_finding(
 async def get_finding(
     engagement_id: str,
     finding_id: str,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_engagement_access),
     db: AsyncSession = Depends(get_db),
 ):
     """Get a specific finding."""
@@ -101,7 +101,7 @@ async def update_finding(
     engagement_id: str,
     finding_id: str,
     body: FindingUpdate,
-    user: User = Depends(require_operator),
+    user: User = Depends(require_operator_engagement),
     db: AsyncSession = Depends(get_db),
 ):
     """Update a finding's status, severity, confidence, or verification notes."""
@@ -135,7 +135,7 @@ async def update_finding(
 async def generate_finding_remediation(
     engagement_id: str,
     finding_id: str,
-    user: User = Depends(require_operator),
+    user: User = Depends(require_operator_engagement),
     db: AsyncSession = Depends(get_db),
 ):
     """Use AI RemediationAgent to generate targeted code patches and regression test verification."""
