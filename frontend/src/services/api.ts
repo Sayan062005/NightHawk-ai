@@ -19,7 +19,20 @@ function readCookie(name: string): string | null {
 }
 
 class ApiService {
+  private refreshInFlight: Promise<boolean> | null = null;
+
   private async refreshSession(): Promise<boolean> {
+    if (this.refreshInFlight) return this.refreshInFlight;
+
+    this.refreshInFlight = this.performRefresh();
+    try {
+      return await this.refreshInFlight;
+    } finally {
+      this.refreshInFlight = null;
+    }
+  }
+
+  private async performRefresh(): Promise<boolean> {
     const csrf = readCookie('nighthawk_csrf');
     if (!csrf) return false;
 
