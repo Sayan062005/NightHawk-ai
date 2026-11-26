@@ -69,7 +69,7 @@ class ApiService {
         : isFormData ? options.body as FormData : JSON.stringify(options.body),
     });
 
-    const isAuthEndpoint = endpoint.startsWith('/auth/');
+    const isAuthEndpoint = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'].includes(endpoint);
     if (response.status === 401 && retryAfterRefresh && !isAuthEndpoint) {
       if (await this.refreshSession()) {
         return this.fetchAuthenticated(endpoint, options, false);
