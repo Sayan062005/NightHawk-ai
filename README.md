@@ -30,7 +30,7 @@
 
 ```
 NightHawk AI
-├── backend/                  # FastAPI 0.115+ asynchronous security service
+├── backend/                  # FastAPI asynchronous security service
 │   ├── app/
 │   │   ├── ai/              # Multi-tier AI engine (NVIDIA NIM + Fallback)
 │   │   ├── api/             # REST endpoints (auth, scans, findings, reports)
@@ -38,16 +38,19 @@ NightHawk AI
 │   │   ├── models/          # SQLAlchemy async ORM models
 │   │   ├── schemas/         # Pydantic v2 validation contracts
 │   │   └── services/        # Scan orchestrator, attack graph, report generator
-│   └── tests/               # 100% passing test suite (39 tests)
+│   └── tests/               # Backend regression tests
 │
-├── frontend/                 # React 19 + TypeScript + Vite + Tailwind CSS
+├── frontend/                 # React + TypeScript + Vite UI
 │   └── src/
-│       ├── components/      # Glassmorphism cyber-aesthetic UI components
+│       ├── components/      # SOC dashboard components
 │       ├── pages/           # Dashboard, Engagements, Scans, Attack Graph
-│       └── services/        # Typed API client with auto JWT refresh
+│       └── services/        # Cookie-based API client
 │
-├── nighthawk_linux_controller.sh  # Standalone Linux Controller (POSIX Bash)
-└── nighthawk_linux_agent.py       # Autonomous Python Linux C2 Agent
+├── deploy/                   # Nginx and Supervisor production configuration
+├── Dockerfile.render         # Single-host Render deployment image
+├── render.yaml               # Render Blueprint
+├── nighthawk_linux_controller.sh
+└── nighthawk_linux_agent.py
 ```
 
 ---
@@ -59,13 +62,8 @@ NightHawk AI
 Take autonomous control of a Linux host with NVIDIA AI:
 
 ```bash
-# Make executable
 chmod +x nighthawk_linux_controller.sh
-
-# Interactive prompt
 ./nighthawk_linux_controller.sh
-
-# Autonomous mode (-y)
 ./nighthawk_linux_controller.sh -y "Audit listening ports and check SUID binaries for privesc"
 ```
 
@@ -73,41 +71,29 @@ chmod +x nighthawk_linux_controller.sh
 
 #### Prerequisites
 - Python 3.11+
-- Node.js 18+ & npm
-- NVIDIA NIM API Key (get free trial credits at [build.nvidia.com](https://build.nvidia.com))
+- Node.js 20+ and npm
+- An NVIDIA NIM API key when using the NVIDIA provider
 
 #### Backend
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate  # Or on Windows: .venv\Scripts\activate
-pip install -e .
+source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
+pip install -e ".[dev]"
 
-# Configure environment
+# Copy the example config and set a unique JWT_SECRET_KEY.
 cp ../.env.example .env
-# Edit .env and supply your NVIDIA_API_KEY
-
-# Run backend API
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 #### Frontend
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-Visit the dashboard at `http://localhost:3000` (or `http://localhost:5173`).
-
----
-
-## 🛡️ Safety & Responsible Disclosure
-
-NightHawk AI includes strict ethical boundaries:
-- Scan execution requires explicit target authorization.
-- Destructive commands (`rm -rf /`, `mkfs`, raw block device writes) are blocked by default.
-- All actions are recorded to the tamper-evident audit log table.
+Visit the dashboard at `http://localhost:3000` (or the Vite URL printed in your terminal).
 
 ---
 
@@ -115,39 +101,33 @@ NightHawk AI includes strict ethical boundaries:
 
 Browser sessions use short-lived JWT access cookies and rotating opaque refresh cookies. The access and refresh cookies are HttpOnly; the CSRF cookie is readable by the frontend and is echoed in the `X-CSRF-Token` header on state-changing requests. Refresh tokens are stored in the database as SHA-256 hashes, not as plaintext.
 
-### Configure authentication
-
-Generate independent secrets (run twice):
+Generate independent secrets (run the command twice):
 
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(48))"
 ```
 
-Set the generated values in `.env`:
+Set `JWT_SECRET_KEY` and `ADMIN_BOOTSTRAP_TOKEN` in the backend environment. For the first administrator, open **Create Account** and enter `ADMIN_BOOTSTRAP_TOKEN` in the administrator bootstrap field. This bootstrap can only be claimed once. All ordinary registrations receive the **viewer** role. After the first administrator is created, remove `ADMIN_BOOTSTRAP_TOKEN` from the environment and restart the backend.
 
-```env
-APP_ENV=development
-JWT_SECRET_KEY=<first-generated-secret>
-ADMIN_BOOTSTRAP_TOKEN=<second-generated-secret>
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=15
-JWT_REFRESH_TOKEN_EXPIRE_DAYS=14
-AUTH_COOKIE_SECURE=false
-AUTH_COOKIE_SAMESITE=lax
-APP_CORS_ORIGINS=["http://localhost:5173"]
-```
+Passwords use Argon2id. Existing bcrypt hashes are upgraded after a successful login. Legacy bcrypt passwords longer than 72 UTF-8 bytes must be reset because the old bcrypt storage truncated them.
 
-For the first administrator, open **Create Account** and enter the `ADMIN_BOOTSTRAP_TOKEN` in the optional administrator bootstrap field. The bootstrap is single-use and protected by a database singleton claim. All ordinary registrations become **viewer** accounts. After the first administrator is created, remove `ADMIN_BOOTSTRAP_TOKEN` from the environment and restart the backend. An administrator can promote users through `PATCH /api/v1/auth/users/{user_id}/role` and reset passwords through `POST /api/v1/auth/users/{user_id}/password` (which revokes that user's refresh sessions). A previously issued access cookie can remain valid for at most its 15-minute lifetime.
+### Production deployment on Render
 
-For production deployments:
-- Serve the frontend and API on the same site/hostname (a reverse proxy routing `/api` to FastAPI is recommended); cookies are host-scoped. Do not mix `localhost` and `127.0.0.1` during local development.
-- Set `VITE_API_BASE_URL` at frontend build time when the API is not at the default `http://localhost:8000/api/v1`.
-- Set `APP_ENV=production`, use HTTPS, and set `AUTH_COOKIE_SECURE=true`.
-- Set `APP_CORS_ORIGINS` to the exact frontend origins; do not use wildcard origins with credentials.
-- Provide a stable `JWT_SECRET_KEY` of at least 32 bytes and keep it outside source control.
-- Use a shared Redis/API-gateway rate limiter when running multiple workers or instances. The included in-process limiter is intended for a single backend process.
-- Back up the database. The new refresh-session and admin-bootstrap tables are created at startup by the existing SQLAlchemy table initialization; use Alembic migrations for managed production schema changes.
+The repository includes a Render Blueprint (`render.yaml`) and a single-host Docker image (`Dockerfile.render`). The frontend and API share one hostname through Nginx, so cookie-based authentication remains same-origin. SQLite data is stored on a persistent 1 GB disk.
 
-Passwords are hashed with Argon2id. Existing bcrypt hashes are verified and upgraded to Argon2id after successful login. Legacy bcrypt passwords longer than 72 UTF-8 bytes must be reset because the old bcrypt storage truncated them.
+The Blueprint uses a **paid Starter web service plus a persistent disk**. Review the current price and resource plan in the Render plan before approving it. It is configured not to auto-deploy later Git pushes. Render generates unique JWT, app, and first-admin bootstrap secrets; retrieve the bootstrap value from the service environment for the first account, then remove it after the administrator is created.
+
+For Docker Compose deployments, provide `JWT_SECRET_KEY`, `NVIDIA_API_KEY`, and optionally `ADMIN_BOOTSTRAP_TOKEN` in your local environment. Rotate any credentials that have ever been committed to a public repository; deleting them from the current source does not remove them from Git history.
+
+---
+
+## 🛡️ Safety & Responsible Disclosure
+
+- Scan execution requires explicit target authorization.
+- Destructive commands (`rm -rf /`, `mkfs`, raw block device writes) are blocked by default.
+- All actions are recorded to the audit log table.
+
+---
 
 ## 📄 License
 
