@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import hmac
-from datetime import datetime, timedelta, timezone
 import secrets
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import func, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import CSRF_COOKIE, validate_csrf, get_current_user, require_admin
+from app.api.deps import CSRF_COOKIE, get_current_user, require_admin, validate_csrf
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.rate_limit import enforce_rate_limit
