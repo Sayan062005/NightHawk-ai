@@ -155,26 +155,10 @@ class ExecutionBroker:
 
             if path:
                 self._tool_paths[tool_name] = path
-                # Try to get version
-                try:
-                    flag = "-version" if tool_name == "nuclei" else "--version"
-                    proc = await asyncio.create_subprocess_exec(
-                        path, flag,
-                        stdout=asyncio.subprocess.PIPE,
-                        stderr=asyncio.subprocess.PIPE,
-                    )
-                    stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=10)
-                    version_text = (stdout or stderr or b"").decode("utf-8", errors="replace")
-                    # Clean ANSI escape sequences
-                    import re
-                    version_text = re.sub(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])", "", version_text)
-                    # Extract first non-empty line as version
-                    lines = [ln.strip() for ln in version_text.splitlines() if ln.strip()]
-                    first_line = lines[0] if lines else ""
-                    tool_data["version"] = first_line[:200]
-                    self._tool_versions[tool_name] = first_line[:200]
-                except Exception:
-                    tool_data["version"] = "unknown"
+                # Avoid spawning scanners just to populate an inventory view.
+                # Version detection is deliberately deferred to an explicit diagnostic
+                # workflow so liveness checks and dashboards stay cheap on small hosts.
+                tool_data["version"] = "not_checked"
 
             inventory[tool_name] = tool_data
             logger.info(
