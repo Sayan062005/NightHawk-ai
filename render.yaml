@@ -2,16 +2,12 @@ services:
   - type: web
     name: nighthawk-ai
     runtime: docker
-    plan: starter
+    plan: free
     region: singapore
     dockerfilePath: ./Dockerfile.render
     dockerContext: .
     healthCheckPath: /api/v1/health
     autoDeploy: false
-    disk:
-      name: nighthawk-data
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
       - key: APP_NAME
         value: NightHawk AI
@@ -22,7 +18,7 @@ services:
       - key: APP_PORT
         value: "8000"
       - key: DATABASE_URL
-        value: sqlite+aiosqlite:////var/data/nighthawk.db
+        value: sqlite+aiosqlite:////tmp/nighthawk.db
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: ADMIN_BOOTSTRAP_TOKEN
