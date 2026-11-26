@@ -620,15 +620,10 @@ export default function App() {
 
   // Check existing session
   useEffect(() => {
-    const token = localStorage.getItem('nighthawk_token');
-    if (token) {
-      api.getMe()
-        .then(u => setUser(u))
-        .catch(() => api.clearToken())
-        .finally(() => setChecking(false));
-    } else {
-      setChecking(false);
-    }
+    api.getMe()
+      .then(u => setUser(u))
+      .catch(() => setUser(null))
+      .finally(() => setChecking(false));
   }, []);
 
   // Theme
@@ -637,8 +632,7 @@ export default function App() {
   }, [theme]);
 
   const handleLogout = () => {
-    api.clearToken();
-    setUser(null);
+    void api.logout().finally(() => setUser(null));
   };
 
   if (checking) {
