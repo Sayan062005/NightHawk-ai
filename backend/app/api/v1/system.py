@@ -91,12 +91,22 @@ async def get_dashboard_stats(
     db: AsyncSession = Depends(get_db),
 ):
     """Get global dashboard statistics."""
-    # Engagements
-    result = await db.execute(select(func.count(Engagement.id)))
+    # Viewers see aggregate data only for engagements they own.
+    engagement_scope = select(Engagement.id)
+    if user.role == "viewer":
+        engagement_scope = engagement_scope.where(Engagement.owner_id == user.id)
+
+    engagement_filter = (Engagement.owner_id == user.id) if user.role == "viewer" else True
+    result = await db.execute(
+        select(func.count(Engagement.id)).where(engagement_filter)
+    )
     total_engagements = result.scalar() or 0
 
     result = await db.execute(
-        select(func.count(Engagement.id)).where(Engagement.status == EngagementStatus.ACTIVE)
+        select(func.count(Engagement.id)).where(
+            engagement_filter,
+            Engagement.status == EngagementStatus.ACTIVE,
+        )
     )
     active_engagements = result.scalar() or 0
 
@@ -104,7 +114,10 @@ async def get_dashboard_stats(
     severity_counts = {}
     for sev in FindingSeverity:
         result = await db.execute(
-            select(func.count(Finding.id)).where(Finding.severity == sev)
+            select(func.count(Finding.id)).where(
+                Finding.severity == sev,
+                Finding.engagement_id.in_(engagement_scope),
+            )
         )
         severity_counts[sev.value] = result.scalar() or 0
 
@@ -112,18 +125,27 @@ async def get_dashboard_stats(
     status_counts = {}
     for stat in [FindingStatus.CONFIRMED, FindingStatus.CANDIDATE, FindingStatus.FALSE_POSITIVE]:
         result = await db.execute(
-            select(func.count(Finding.id)).where(Finding.status == stat)
+            select(func.count(Finding.id)).where(
+                Finding.status == stat,
+                Finding.engagement_id.in_(engagement_scope),
+            )
         )
         status_counts[stat.value] = result.scalar() or 0
 
     # Scans
     result = await db.execute(
-        select(func.count(ScanJob.id)).where(ScanJob.status == ScanStatus.RUNNING)
+        select(func.count(ScanJob.id)).where(
+            ScanJob.status == ScanStatus.RUNNING,
+            ScanJob.engagement_id.in_(engagement_scope),
+        )
     )
     active_scans = result.scalar() or 0
 
     result = await db.execute(
-        select(func.count(ScanJob.id)).where(ScanJob.status == ScanStatus.COMPLETED)
+        select(func.count(ScanJob.id)).where(
+            ScanJob.status == ScanStatus.COMPLETED,
+            ScanJob.engagement_id.in_(engagement_scope),
+        )
     )
     completed_scans = result.scalar() or 0
 
