@@ -79,6 +79,16 @@ async def require_admin(user: User = Depends(get_current_user)) -> User:
     return user
 
 
+async def require_operator_engagement(
+    engagement_id: str,
+    user: User = Depends(require_operator),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """Require operator role and access to the requested engagement."""
+    await ensure_engagement_access(engagement_id, user, db)
+    return user
+
+
 async def ensure_engagement_access(
     engagement_id: str,
     user: User,
