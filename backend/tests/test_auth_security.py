@@ -9,6 +9,7 @@ import bcrypt
 import pytest
 from fastapi import HTTPException
 
+from app.api.deps import ensure_engagement_access
 from app.core.config import get_settings
 from app.core.security import (
     create_access_token,
@@ -93,3 +94,41 @@ async def test_auth_rate_limiter_blocks_excess_attempts():
         await enforce_rate_limit(request, "test-auth", limit=1, window_seconds=60)
 
     assert error.value.status_code == 429
+
+
+
+class _FakeResult:
+    def __init__(self, value):
+        self.value = value
+
+    def scalar_one_or_none(self):
+        return self.value
+
+
+class _FakeSession:
+    def __init__(self, engagement):
+        self.engagement = engagement
+
+    async def execute(self, _statement):
+        return _FakeResult(self.engagement)
+
+
+@pytest.mark.asyncio
+async def test_viewer_can_access_owned_engagement():
+    engagement = SimpleNamespace(id="eng-1", owner_id="user-1")
+    user = SimpleNamespace(id="user-1", role="viewer")
+
+    result = await ensure_engagement_access("eng-1", user, _FakeSession(engagement))
+
+    assert result is engagement
+
+
+@pytest.mark.asyncio
+async def test_viewer_cannot_access_another_users_engagement():
+    engagement = SimpleNamespace(id="eng-1", owner_id="owner-1")
+    user = SimpleNamespace(id="viewer-1", role="viewer")
+
+    with pytest.raises(HTTPException) as error:
+        await ensure_engagement_access("eng-1", user, _FakeSession(engagement))
+
+    assert error.value.status_code == 404
