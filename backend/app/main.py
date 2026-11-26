@@ -37,18 +37,8 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("database_initialized")
 
-    # Detect available tools
-    from app.core.execution import get_execution_broker
-    broker = get_execution_broker()
-    inventory = await broker.detect_tools()
-    available = sum(1 for t in inventory.values() if t["available"])
-    logger.info("tools_detected", available=available, total=len(inventory))
-
-    # Check AI provider
-    from app.ai.providers import get_ai_manager
-    ai_manager = get_ai_manager()
-    ai_healthy, ai_name = await ai_manager.health_check()
-    logger.info("ai_provider_status", provider=ai_name, available=ai_healthy)
+    # Keep startup lightweight. Tool discovery and provider checks are lazy
+    # operations exposed through their respective API endpoints.
 
     logger.info("application_ready")
     yield
