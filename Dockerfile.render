@@ -44,8 +44,8 @@ RUN ARCH=$(dpkg --print-architecture) && \
 
 WORKDIR /app
 COPY backend/pyproject.toml ./
-RUN pip install --no-cache-dir -e .
 COPY backend/app/ ./app/
+RUN pip install --no-cache-dir .
 
 COPY --from=frontend-build /frontend/dist /var/www/nighthawk
 COPY deploy/nginx.conf /etc/nginx/sites-available/default
