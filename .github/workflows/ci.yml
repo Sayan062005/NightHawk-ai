@@ -53,3 +53,11 @@ jobs:
         run: npm ci
       - name: Build frontend
         run: npm run build
+
+  render-container-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build Render image
+        run: docker build --pull -f Dockerfile.render -t nighthawk-render:ci .
