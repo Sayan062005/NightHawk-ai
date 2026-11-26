@@ -1,0 +1,58 @@
+# Build the React frontend with same-origin API requests.
+FROM node:20-alpine AS frontend-build
+
+WORKDIR /frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+ARG VITE_API_BASE_URL=/api/v1
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+RUN npm run build
+
+# Run FastAPI behind Nginx on one Render web service.
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nginx \
+    supervisor \
+    curl \
+    iproute2 \
+    net-tools \
+    procps \
+    nmap \
+    whatweb \
+    testssl.sh \
+    git \
+    unzip \
+    jq \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir semgrep
+
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "amd64" ]; then \
+        curl -fsSL https://github.com/projectdiscovery/nuclei/releases/download/v3.3.8/nuclei_3.3.8_linux_amd64.zip -o /tmp/nuclei.zip && \
+        unzip -q /tmp/nuclei.zip -d /usr/local/bin nuclei && \
+        chmod +x /usr/local/bin/nuclei && rm /tmp/nuclei.zip && \
+        curl -fsSL https://github.com/google/osv-scanner/releases/download/v1.9.2/osv-scanner_linux_amd64 -o /usr/local/bin/osv-scanner && \
+        chmod +x /usr/local/bin/osv-scanner; \
+    fi
+
+WORKDIR /app
+COPY backend/pyproject.toml ./
+COPY backend/app/ ./app/
+RUN pip install --no-cache-dir .
+
+COPY --from=frontend-build /frontend/dist /var/www/nighthawk
+COPY deploy/nginx.conf /etc/nginx/sites-available/default
+RUN rm -f /etc/nginx/sites-enabled/default && \
+    ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default && \
+    mkdir -p /var/data
+COPY deploy/supervisord.conf /etc/supervisor/conf.d/nighthawk.conf
+
+EXPOSE 10000
+CMD ["supervisord", "-n", "-c", "/etc/supervisor/conf.d/nighthawk.conf"]

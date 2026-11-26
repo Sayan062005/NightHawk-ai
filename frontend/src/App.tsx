@@ -88,6 +88,7 @@ function LoginPage({ onLogin }: { onLogin: (user: User) => void }) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [bootstrapToken, setBootstrapToken] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -98,7 +99,7 @@ function LoginPage({ onLogin }: { onLogin: (user: User) => void }) {
     try {
       let data;
       if (isRegister) {
-        data = await api.register(username, email, password);
+        data = await api.register(username, email, password, bootstrapToken || undefined);
       } else {
         data = await api.login(username, password);
       }
@@ -204,6 +205,20 @@ function LoginPage({ onLogin }: { onLogin: (user: User) => void }) {
                 minLength={8}
               />
             </div>
+
+            {isRegister && (
+              <div className="form-group">
+                <label className="form-label">Administrator bootstrap token (optional)</label>
+                <input
+                  className="form-input"
+                  type="password"
+                  value={bootstrapToken}
+                  onChange={e => setBootstrapToken(e.target.value)}
+                  placeholder="Only for the initial administrator"
+                  autoComplete="off"
+                />
+              </div>
+            )}
 
             <button className="btn btn-primary btn-lg w-full" type="submit" disabled={loading}
               style={{ justifyContent: 'center', marginTop: 4 }}>
@@ -620,15 +635,12 @@ export default function App() {
 
   // Check existing session
   useEffect(() => {
-    const token = localStorage.getItem('nighthawk_token');
-    if (token) {
-      api.getMe()
-        .then(u => setUser(u))
-        .catch(() => api.clearToken())
-        .finally(() => setChecking(false));
-    } else {
-      setChecking(false);
-    }
+    // Remove tokens left by older versions that stored bearer JWTs in localStorage.
+    localStorage.removeItem('nighthawk_token');
+    api.getMe()
+      .then(u => setUser(u))
+      .catch(() => setUser(null))
+      .finally(() => setChecking(false));
   }, []);
 
   // Theme
@@ -637,8 +649,7 @@ export default function App() {
   }, [theme]);
 
   const handleLogout = () => {
-    api.clearToken();
-    setUser(null);
+    void api.logout().catch(() => undefined).finally(() => setUser(null));
   };
 
   if (checking) {

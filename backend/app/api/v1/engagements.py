@@ -10,7 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_current_user, require_operator
+from app.api.deps import ensure_engagement_access, get_current_user, require_operator
 from app.core.database import get_db
 from app.models.models import (
     Engagement,
@@ -109,6 +109,7 @@ async def get_engagement(
     engagement = result.scalar_one_or_none()
     if not engagement:
         raise HTTPException(status_code=404, detail="Engagement not found")
+    await ensure_engagement_access(engagement_id, user, db)
     return EngagementResponse.model_validate(engagement)
 
 
@@ -128,6 +129,7 @@ async def update_engagement(
     engagement = result.scalar_one_or_none()
     if not engagement:
         raise HTTPException(status_code=404, detail="Engagement not found")
+    await ensure_engagement_access(engagement_id, user, db)
 
     if body.name is not None:
         engagement.name = body.name
@@ -157,6 +159,7 @@ async def get_engagement_stats(
     result = await db.execute(select(Engagement).where(Engagement.id == engagement_id))
     if not result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Engagement not found")
+    await ensure_engagement_access(engagement_id, user, db)
 
     # Count findings by severity
     severity_counts = {}

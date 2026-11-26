@@ -14,7 +14,11 @@ services:
       - APP_ENV=production
       - APP_HOST=0.0.0.0
       - APP_PORT=8000
-      - NVIDIA_API_KEY=${NVIDIA_API_KEY:-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}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in the environment}
+      - ADMIN_BOOTSTRAP_TOKEN=${ADMIN_BOOTSTRAP_TOKEN:-}
+      - AUTH_COOKIE_SECURE=true
+      - AUTH_COOKIE_SAMESITE=lax
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY:?Set NVIDIA_API_KEY in the environment}
       - NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
       - NVIDIA_MODEL=z-ai/glm-5.3
       - AI_PROVIDER=nvidia
@@ -54,8 +58,6 @@ services:
       - ./nighthawk_linux_controller.sh:/app/nighthawk_linux_controller.sh:ro
       - ./nighthawk_linux_agent.py:/app/nighthawk_linux_agent.py:ro
     working_dir: /app
-    environment:
-      - NVIDIA_API_KEY=${NVIDIA_API_KEY:-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}
     restart: unless-stopped
     networks:
       - nighthawk-net

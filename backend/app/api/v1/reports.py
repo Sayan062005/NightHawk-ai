@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.api.deps import get_current_user
+from app.api.deps import require_engagement_access
 from app.core.database import get_db
 from app.models.models import Engagement, Finding, User
 from app.services.report_generator import ReportGenerator
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/engagements/{engagement_id}/reports", tags=["Reports
 @router.get("/markdown", response_class=Response)
 async def get_markdown_report(
     engagement_id: str,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_engagement_access),
     db: AsyncSession = Depends(get_db),
 ):
     """Generate and return Markdown penetration testing report."""
@@ -43,7 +43,7 @@ async def get_markdown_report(
 @router.get("/html", response_class=Response)
 async def get_html_report(
     engagement_id: str,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_engagement_access),
     db: AsyncSession = Depends(get_db),
 ):
     """Generate and return HTML penetration testing report."""

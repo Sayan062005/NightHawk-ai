@@ -8,109 +8,109 @@
 [![NVIDIA NIM](https://img.shields.io/badge/AI-NVIDIA%20NIM%20GLM--5.3-76B900.svg)](https://build.nvidia.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**NightHawk AI** is an autonomous cybersecurity assessment and tactical Linux terminal controller. Built for security researchers and pen-testers, it connects local pentesting workflows with **NVIDIA NIM** reasoning models (`z-ai/glm-5.3` and `z-ai/glm-5.3-flash`) through an automatic fallback system and execution safety guardrails.
+**NightHawk AI** is an autonomous cybersecurity assessment and tactical Linux terminal controller. Built for security researchers and pen-testers, it connects local pentesting workflows with AI reasoning providers and execution safety guardrails.
 
 ---
 
-## ⚡ Core Capabilities
+## Core capabilities
 
-- 🔍 **Autonomous Vulnerability Discovery & Mapping:** Web audits, security header analysis, attack surface enumeration, and attack-graph generation.
-- 🧠 **NVIDIA NIM Dual-Model Orchestration:** Primary reasoning powered by `z-ai/glm-5.3` with automatic 3-second fallback to `z-ai/glm-5.3-flash` on timeout or high load.
-- 🐧 **Autonomous Linux C2 Agent (`nighthawk_linux_controller.sh`):**
-  - Standalone, zero-dependency executable POSIX bash script with embedded Python agent.
-  - Interactive REPL and autonomous execution mode (`-y` / `--auto`).
-  - Gathers host telemetry (`/etc/os-release`, EUID, installed pentest tools).
-  - Safety guardrails blocking destructive commands (`rm -rf /`, raw disk writes, forkbombs).
-- 📊 **Security Operations Center (SOC) UI:** Glassmorphism-styled reactive dashboard featuring live logs, finding severity matrices, attack graph visualization, and PDF executive reports.
-- 🔒 **Defense-in-Depth:** Mandatory authorization tokens, rate limiters, deterministic fallback providers, and full audit logging.
+- Vulnerability discovery, security header analysis and attack-surface enumeration.
+- AI-assisted security assessment with provider fallback.
+- Linux security tools and controlled command execution.
+- SOC dashboard with findings, engagement tracking and reports.
+- Authentication, role checks, rate limits and audit logging.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 NightHawk AI
-├── backend/                  # FastAPI 0.115+ asynchronous security service
+├── backend/                  # FastAPI asynchronous security service
 │   ├── app/
-│   │   ├── ai/              # Multi-tier AI engine (NVIDIA NIM + Fallback)
-│   │   ├── api/             # REST endpoints (auth, scans, findings, reports)
+│   │   ├── ai/              # AI provider integration
+│   │   ├── api/             # REST endpoints
 │   │   ├── core/            # Config, security, database sessions
 │   │   ├── models/          # SQLAlchemy async ORM models
-│   │   ├── schemas/         # Pydantic v2 validation contracts
-│   │   └── services/        # Scan orchestrator, attack graph, report generator
-│   └── tests/               # 100% passing test suite (39 tests)
-│
-├── frontend/                 # React 19 + TypeScript + Vite + Tailwind CSS
-│   └── src/
-│       ├── components/      # Glassmorphism cyber-aesthetic UI components
-│       ├── pages/           # Dashboard, Engagements, Scans, Attack Graph
-│       └── services/        # Typed API client with auto JWT refresh
-│
-├── nighthawk_linux_controller.sh  # Standalone Linux Controller (POSIX Bash)
-└── nighthawk_linux_agent.py       # Autonomous Python Linux C2 Agent
+│   │   ├── schemas/         # Pydantic API contracts
+│   │   └── services/        # Scan orchestration and reporting
+│   └── tests/               # Backend regression tests
+├── frontend/                 # React + TypeScript + Vite UI
+├── deploy/                   # Nginx and Supervisor production configuration
+├── Dockerfile.render         # Single-host Render deployment image
+├── render.yaml               # Render Blueprint
+├── nighthawk_linux_controller.sh
+└── nighthawk_linux_agent.py
 ```
 
 ---
 
-## 🚀 Quick Start
+## Local setup
 
-### 1. Standalone Linux Controller (Kali / Ubuntu / Debian)
-
-Take autonomous control of a Linux host with NVIDIA AI:
-
-```bash
-# Make executable
-chmod +x nighthawk_linux_controller.sh
-
-# Interactive prompt
-./nighthawk_linux_controller.sh
-
-# Autonomous mode (-y)
-./nighthawk_linux_controller.sh -y "Audit listening ports and check SUID binaries for privesc"
-```
-
-### 2. Full Platform Setup
-
-#### Prerequisites
+### Prerequisites
 - Python 3.11+
-- Node.js 18+ & npm
-- NVIDIA NIM API Key (get free trial credits at [build.nvidia.com](https://build.nvidia.com))
+- Node.js 20+ and npm
+- An NVIDIA NIM API key only when using the NVIDIA provider
 
-#### Backend
+### Backend
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate  # Or on Windows: .venv\Scripts\activate
-pip install -e .
-
-# Configure environment
+source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
+pip install -e ".[dev]"
 cp ../.env.example .env
-# Edit .env and supply your NVIDIA_API_KEY
-
-# Run backend API
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-#### Frontend
+### Frontend
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-Visit the dashboard at `http://localhost:3000` (or `http://localhost:5173`).
+Visit the dashboard at the local URL printed by Vite.
 
 ---
 
-## 🛡️ Safety & Responsible Disclosure
+## Authentication & security
 
-NightHawk AI includes strict ethical boundaries:
-- Scan execution requires explicit target authorization.
-- Destructive commands (`rm -rf /`, `mkfs`, raw block device writes) are blocked by default.
-- All actions are recorded to the tamper-evident audit log table.
+Browser sessions use short-lived JWT access cookies and rotating opaque refresh cookies. The access and refresh cookies are HttpOnly; the CSRF cookie is readable by the frontend and echoed in the `X-CSRF-Token` header on state-changing requests. Refresh tokens are stored in the database as SHA-256 hashes.
+
+Generate independent secrets (run the command twice):
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+Set `JWT_SECRET_KEY` and `ADMIN_BOOTSTRAP_TOKEN` in the backend environment. For the first administrator, enter `ADMIN_BOOTSTRAP_TOKEN` in the administrator bootstrap field on the registration page. This bootstrap can only be claimed once. Ordinary registrations receive the **viewer** role. Remove `ADMIN_BOOTSTRAP_TOKEN` from the environment after creating the first administrator.
+
+Passwords use Argon2id. Existing bcrypt hashes are upgraded after a successful login. Legacy bcrypt passwords longer than 72 UTF-8 bytes must be reset because the old bcrypt storage truncated them.
 
 ---
 
-## 📄 License
+## Free deployment on Render
+
+The repository includes a Render Blueprint (`render.yaml`) and a single-host Docker image (`Dockerfile.render`). The frontend and API share one hostname through Nginx, which keeps cookie-based authentication same-origin.
+
+The Blueprint uses the **Free** web-service plan only. It does not create a paid persistent disk or managed database. SQLite is stored in the container's temporary filesystem, so database contents, accounts and findings can be lost when the service restarts, is redeployed, or its free instance is recycled. The free service may also sleep when idle and take time to wake up.
+
+This configuration is intended for a free demo or evaluation environment, not production use with important user data. Keep regular exports/backups of any data you need to retain. No paid service should be enabled without your explicit approval.
+
+Render generates unique JWT, app and first-administrator bootstrap secrets. Retrieve the bootstrap value from the service environment for the first account, then remove it after the administrator is created.
+
+AI runs with the fallback provider by default, so an NVIDIA key is not required for this free deployment. To enable NVIDIA AI later, add a newly rotated key through Render's environment settings—never commit it to Git.
+
+---
+
+## Safety & responsible use
+
+- Scan only targets for which you have explicit authorization.
+- Destructive commands are blocked by default.
+- Actions are recorded in the audit log.
+
+---
+
+## License
 
 Distributed under the MIT License. See `LICENSE` for details.

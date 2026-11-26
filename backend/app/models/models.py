@@ -119,6 +119,28 @@ class User(Base):
     audit_events = relationship("AuditEvent", back_populates="user")
 
 
+class AdminBootstrapClaim(Base):
+    """Singleton record preventing concurrent first-admin bootstrap."""
+
+    __tablename__ = "admin_bootstrap_claims"
+
+    id = Column(String, primary_key=True)
+    created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
+
+
+class RefreshToken(Base):
+    """Hashed, single-use refresh sessions for browser authentication."""
+
+    __tablename__ = "refresh_tokens"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    token_hash = Column(String(64), unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    revoked_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=_utcnow, nullable=False)
+
+
 class Engagement(Base):
     __tablename__ = "engagements"
 

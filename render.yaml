@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: nighthawk-ai
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile.render
+    dockerContext: .
+    healthCheckPath: /api/v1/health
+    autoDeploy: false
+    envVars:
+      - key: APP_NAME
+        value: NightHawk AI
+      - key: APP_ENV
+        value: production
+      - key: APP_HOST
+        value: 0.0.0.0
+      - key: APP_PORT
+        value: "8000"
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:////tmp/nighthawk.db
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: ADMIN_BOOTSTRAP_TOKEN
+        generateValue: true
+      - key: APP_SECRET_KEY
+        generateValue: true
+      - key: JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "15"
+      - key: JWT_REFRESH_TOKEN_EXPIRE_DAYS
+        value: "14"
+      - key: AUTH_COOKIE_SECURE
+        value: "true"
+      - key: AUTH_COOKIE_SAMESITE
+        value: lax
+      - key: APP_CORS_ORIGINS
+        value: "[]"
+      - key: AI_PROVIDER
+        value: fallback

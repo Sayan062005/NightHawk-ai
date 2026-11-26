@@ -15,6 +15,7 @@ dependencies = [
     "pydantic-settings>=2.3.0",
     "python-jose[cryptography]>=3.3.0",
     "passlib[bcrypt]>=1.7.4",
+    "argon2-cffi>=23.1.0",
     "python-multipart>=0.0.9",
     "httpx>=0.27.0",
     "websockets>=12.0",
@@ -46,6 +47,11 @@ redis = [
 [build-system]
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+exclude = ["tests*", "tools_bin*"]
 
 [tool.ruff]
 target-version = "py311"

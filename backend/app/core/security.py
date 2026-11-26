@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime, timedelta, timezone
 import secrets
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import bcrypt
@@ -30,8 +30,11 @@ def verify_password(plain: str, hashed: str) -> bool:
         return False
     try:
         if hashed.startswith("$2"):
-            # Existing accounts were stored using bcrypt with 72-byte truncation.
-            return bcrypt.checkpw(plain.encode("utf-8")[:72], hashed.encode("utf-8"))
+            # Do not accept the ambiguous suffix of legacy passwords after bcrypt's
+            # 72-byte truncation. Require a password reset for these edge cases.
+            if len(plain.encode("utf-8")) > 72:
+                return False
+            return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
         return _password_hasher.verify(hashed, plain)
     except (VerifyMismatchError, VerificationError, InvalidHashError, ValueError, TypeError):
         return False

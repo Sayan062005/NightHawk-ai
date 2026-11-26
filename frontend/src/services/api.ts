@@ -1,6 +1,6 @@
-/* API Service — All backend communication */
+/* API Service — cookie-based authentication and typed API access */
 
-const API_BASE = 'http://localhost:8000/api/v1';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 
 interface RequestOptions {
   method?: string;
@@ -8,72 +8,133 @@ interface RequestOptions {
   headers?: Record<string, string>;
 }
 
+interface AuthResponse {
+  user: any;
+}
+
+function readCookie(name: string): string | null {
+  const prefix = `${name}=`;
+  const entry = document.cookie.split('; ').find(part => part.startsWith(prefix));
+  return entry ? decodeURIComponent(entry.slice(prefix.length)) : null;
+}
+
 class ApiService {
-  private token: string | null = null;
+  private refreshInFlight: Promise<boolean> | null = null;
 
-  setToken(token: string) {
-    this.token = token;
-    localStorage.setItem('nighthawk_token', token);
-  }
+  private async refreshSession(): Promise<boolean> {
+    if (this.refreshInFlight) return this.refreshInFlight;
 
-  getToken(): string | null {
-    if (!this.token) {
-      this.token = localStorage.getItem('nighthawk_token');
+    this.refreshInFlight = this.performRefresh();
+    try {
+      return await this.refreshInFlight;
+    } finally {
+      this.refreshInFlight = null;
     }
-    return this.token;
   }
 
-  clearToken() {
-    this.token = null;
-    localStorage.removeItem('nighthawk_token');
+  private async performRefresh(): Promise<boolean> {
+    const csrf = readCookie('nighthawk_csrf');
+    if (!csrf) return false;
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'X-CSRF-Token': csrf },
+      });
+      if (response.ok) return true;
+
+      // Expired or revoked sessions should not leave stale HttpOnly cookies behind.
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'X-CSRF-Token': csrf },
+      }).catch(() => undefined);
+      return false;
+    } catch {
+      return false;
+    }
   }
 
-  private async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    };
+  private async fetchAuthenticated(
+    endpoint: string,
+    options: RequestOptions = {},
+    retryAfterRefresh = true,
+  ): Promise<Response> {
+    const method = (options.method || 'GET').toUpperCase();
+    const headers: Record<string, string> = { ...options.headers };
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+    if (options.body !== undefined && !isFormData) {
+      headers['Content-Type'] = 'application/json';
+    }
 
-    const token = this.getToken();
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+      const csrf = readCookie('nighthawk_csrf');
+      if (csrf) headers['X-CSRF-Token'] = csrf;
     }
 
     const response = await fetch(`${API_BASE}${endpoint}`, {
-      method: options.method || 'GET',
+      method,
+      credentials: 'include',
       headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
+      body: options.body === undefined
+        ? undefined
+        : isFormData ? options.body as FormData : JSON.stringify(options.body),
     });
 
+    const isAuthEndpoint = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/logout'].includes(endpoint);
+    if (response.status === 401 && retryAfterRefresh && !isAuthEndpoint) {
+      if (await this.refreshSession()) {
+        return this.fetchAuthenticated(endpoint, options, false);
+      }
+    }
+    return response;
+  }
+
+  private async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+    const response = await this.fetchAuthenticated(endpoint, options);
     if (!response.ok) {
       const error = await response.json().catch(() => ({ detail: 'Request failed' }));
       throw new Error(error.detail || `HTTP ${response.status}`);
     }
-
+    if (response.status === 204) return undefined as T;
     return response.json();
   }
 
-  // Auth
-  async register(username: string, email: string, password: string) {
-    const data = await this.request<{ access_token: string; user: any }>('/auth/register', {
+  private async requestText(endpoint: string): Promise<string> {
+    const response = await this.fetchAuthenticated(endpoint);
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Request failed' }));
+      throw new Error(error.detail || `HTTP ${response.status}`);
+    }
+    return response.text();
+  }
+
+  // Authentication — credentials are sent once; the server sets HttpOnly cookies.
+  async register(username: string, email: string, password: string, bootstrapToken?: string) {
+    return this.request<AuthResponse>('/auth/register', {
       method: 'POST',
-      body: { username, email, password },
+      body: { username, email, password, ...(bootstrapToken ? { bootstrap_token: bootstrapToken } : {}) },
     });
-    this.setToken(data.access_token);
-    return data;
   }
 
   async login(username: string, password: string) {
-    const data = await this.request<{ access_token: string; user: any }>('/auth/login', {
+    return this.request<AuthResponse>('/auth/login', {
       method: 'POST',
       body: { username, password },
     });
-    this.setToken(data.access_token);
-    return data;
   }
 
   async getMe() {
     return this.request<any>('/auth/me');
+  }
+
+  async logout() {
+    try {
+      await this.fetchAuthenticated('/auth/logout', { method: 'POST' }, false);
+    } finally {
+      // No authentication token is exposed to or retained by JavaScript.
+    }
   }
 
   // System
@@ -141,19 +202,11 @@ class ApiService {
 
   // Reports
   async getMarkdownReport(engagementId: string) {
-    const token = this.getToken();
-    const res = await fetch(`${API_BASE}/engagements/${engagementId}/reports/markdown`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    return res.text();
+    return this.requestText(`/engagements/${engagementId}/reports/markdown`);
   }
 
   async getHtmlReport(engagementId: string) {
-    const token = this.getToken();
-    const res = await fetch(`${API_BASE}/engagements/${engagementId}/reports/html`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    return res.text();
+    return this.requestText(`/engagements/${engagementId}/reports/html`);
   }
 
   // Blue Team
@@ -170,28 +223,17 @@ class ApiService {
   }
 
   async getNginxConfig(engagementId: string) {
-    const token = this.getToken();
-    const res = await fetch(`${API_BASE}/engagements/${engagementId}/blueteam/nginx-config`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-    return res.text();
+    return this.requestText(`/engagements/${engagementId}/blueteam/nginx-config`);
   }
 
   // HAR Analysis
   async uploadHar(engagementId: string, file: File) {
     const formData = new FormData();
     formData.append('file', file);
-    const token = this.getToken();
-    const res = await fetch(`${API_BASE}/engagements/${engagementId}/har/upload`, {
+    return this.request<any>(`/engagements/${engagementId}/har/upload`, {
       method: 'POST',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: formData,
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: 'Upload failed' }));
-      throw new Error(err.detail || 'HAR analysis failed');
-    }
-    return res.json();
   }
 }
 

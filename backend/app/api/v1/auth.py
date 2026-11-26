@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import hmac
-from datetime import datetime, timedelta, timezone
 import secrets
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import func, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import CSRF_COOKIE, validate_csrf, get_current_user, require_admin
+from app.api.deps import CSRF_COOKIE, get_current_user, require_admin, validate_csrf
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.rate_limit import enforce_rate_limit
@@ -22,8 +23,8 @@ from app.core.security import (
     password_needs_rehash,
     verify_password,
 )
-from app.models.models import RefreshToken, User, UserRole
-from app.schemas.schemas import AuthResponse, LoginRequest, RoleUpdate, UserCreate, UserResponse
+from app.models.models import AdminBootstrapClaim, RefreshToken, User, UserRole
+from app.schemas.schemas import AuthResponse, LoginRequest, PasswordReset, RoleUpdate, UserCreate, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 ACCESS_COOKIE = "nighthawk_access"
@@ -57,20 +58,29 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
         secrets.token_urlsafe(32),
         max_age=settings.jwt_refresh_token_expire_days * 86400,
         httponly=False,
-        **common,
+        secure=settings.auth_cookie_secure,
+        samesite=settings.auth_cookie_samesite,
+        path="/",
     )
 
 
 def _clear_auth_cookies(response: Response) -> None:
     settings = get_settings()
-    for cookie_name in (ACCESS_COOKIE, REFRESH_COOKIE, CSRF_COOKIE):
+    for cookie_name in (ACCESS_COOKIE, REFRESH_COOKIE):
         response.delete_cookie(
             cookie_name,
             path=COOKIE_PATH,
             secure=settings.auth_cookie_secure,
-            httponly=cookie_name != CSRF_COOKIE,
+            httponly=True,
             samesite=settings.auth_cookie_samesite,
         )
+    response.delete_cookie(
+        CSRF_COOKIE,
+        path="/",
+        secure=settings.auth_cookie_secure,
+        httponly=False,
+        samesite=settings.auth_cookie_samesite,
+    )
 
 
 async def _issue_refresh_token(db: AsyncSession, user_id: str) -> str:
@@ -113,7 +123,16 @@ async def register(
         admin_count = await db.scalar(
             select(func.count(User.id)).where(User.role == UserRole.ADMIN)
         )
-        is_admin_bootstrap = (admin_count or 0) == 0
+        if (admin_count or 0) > 0:
+            raise HTTPException(status_code=409, detail="Administrator bootstrap has already been completed")
+        # The unique singleton claim makes simultaneous bootstrap attempts mutually exclusive.
+        db.add(AdminBootstrapClaim(id="initial-admin"))
+        try:
+            await db.flush()
+        except IntegrityError:
+            await db.rollback()
+            raise HTTPException(status_code=409, detail="Administrator bootstrap has already been claimed")
+        is_admin_bootstrap = True
 
     user = User(
         username=body.username,
@@ -148,7 +167,6 @@ async def login(
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account is disabled")
 
-    # Transparently migrate legacy bcrypt hashes to Argon2id after successful login.
     if password_needs_rehash(user.hashed_password):
         user.hashed_password = hash_password(body.password)
 
@@ -188,7 +206,8 @@ async def refresh_session(
     if refresh_record.revoked_at is not None or expires_at <= now:
         raise HTTPException(status_code=401, detail="Refresh session expired or revoked")
 
-    # Conditional update makes rotation single-use, including concurrent refresh attempts.
+    # Database-side conditional update makes rotation single-use, including concurrent attempts.
+    # Disable ORM synchronization: SQLite returns naive datetimes for timezone columns.
     revoked = await db.execute(
         update(RefreshToken)
         .where(
@@ -197,6 +216,7 @@ async def refresh_session(
             RefreshToken.expires_at > now,
         )
         .values(revoked_at=now)
+        .execution_options(synchronize_session=False)
     )
     if revoked.rowcount != 1:
         raise HTTPException(status_code=401, detail="Refresh token has already been used")
@@ -224,6 +244,7 @@ async def logout(
                 RefreshToken.revoked_at.is_(None),
             )
             .values(revoked_at=datetime.now(timezone.utc))
+            .execution_options(synchronize_session=False)
         )
     _clear_auth_cookies(response)
     return {"detail": "Logged out"}
@@ -233,6 +254,30 @@ async def logout(
 async def get_me(user: User = Depends(get_current_user)):
     """Get current user profile."""
     return UserResponse.model_validate(user)
+
+
+@router.post("/users/{user_id}/password")
+async def reset_user_password(
+    user_id: str,
+    body: PasswordReset,
+    admin: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Allow an administrator to reset a user's password and revoke refresh sessions."""
+    result = await db.execute(select(User).where(User.id == user_id))
+    target = result.scalar_one_or_none()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    target.hashed_password = hash_password(body.new_password)
+    await db.execute(
+        update(RefreshToken)
+        .where(RefreshToken.user_id == user_id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(timezone.utc))
+        .execution_options(synchronize_session=False)
+    )
+    await db.flush()
+    return {"detail": "Password reset; existing refresh sessions have been revoked"}
 
 
 @router.patch("/users/{user_id}/role", response_model=UserResponse)
