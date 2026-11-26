@@ -92,8 +92,17 @@ class Settings(BaseSettings):
 
         if len(self.jwt_secret_key.encode("utf-8")) < 32:
             raise ValueError("JWT_SECRET_KEY must contain at least 32 bytes")
-        if any(marker in self.jwt_secret_key.lower() for marker in ("change_me", "replace_me", "your_secret")):
+        if any(marker in self.jwt_secret_key.lower() for marker in (
+            "change_me", "replace_me", "replace_with", "your_secret", "your-secret"
+        )):
             raise ValueError("JWT_SECRET_KEY still contains a placeholder value")
+        if self.admin_bootstrap_token and (
+            len(self.admin_bootstrap_token.encode("utf-8")) < 32
+            or any(marker in self.admin_bootstrap_token.lower() for marker in (
+                "change_me", "replace_me", "replace_with", "your_secret"
+            ))
+        ):
+            raise ValueError("ADMIN_BOOTSTRAP_TOKEN must be a non-placeholder secret of at least 32 bytes")
         if self.jwt_algorithm != "HS256":
             raise ValueError("Only HS256 is supported by this application")
         if self.jwt_access_token_expire_minutes < 5 or self.jwt_access_token_expire_minutes > 60:
