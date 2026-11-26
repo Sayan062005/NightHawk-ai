@@ -635,6 +635,8 @@ export default function App() {
 
   // Check existing session
   useEffect(() => {
+    // Remove tokens left by older versions that stored bearer JWTs in localStorage.
+    localStorage.removeItem('nighthawk_token');
     api.getMe()
       .then(u => setUser(u))
       .catch(() => setUser(null))
