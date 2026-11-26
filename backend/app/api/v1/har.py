@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import require_operator
+from app.api.deps import require_operator_engagement
 from app.core.database import get_db
 from app.models.models import (
     AttackPathNode,
@@ -30,7 +30,7 @@ router = APIRouter(prefix="/engagements/{engagement_id}/har", tags=["HAR Analysi
 async def upload_and_analyze_har(
     engagement_id: str,
     file: UploadFile = File(...),
-    user: User = Depends(require_operator),
+    user: User = Depends(require_operator_engagement),
     db: AsyncSession = Depends(get_db),
 ):
     """Upload and analyze a .har HTTP traffic recording, importing all discovered security weaknesses."""
