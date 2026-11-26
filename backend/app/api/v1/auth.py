@@ -60,8 +60,6 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
         httponly=False,
         secure=settings.auth_cookie_secure,
         samesite=settings.auth_cookie_samesite,
-        # The frontend runs at "/" and must be able to read this non-secret
-        # double-submit token to echo it in X-CSRF-Token.
         path="/",
     )
 
@@ -169,7 +167,6 @@ async def login(
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account is disabled")
 
-    # Transparently migrate legacy bcrypt hashes to Argon2id after successful login.
     if password_needs_rehash(user.hashed_password):
         user.hashed_password = hash_password(body.password)
 
@@ -209,7 +206,8 @@ async def refresh_session(
     if refresh_record.revoked_at is not None or expires_at <= now:
         raise HTTPException(status_code=401, detail="Refresh session expired or revoked")
 
-    # Conditional update makes rotation single-use, including concurrent refresh attempts.
+    # Database-side conditional update makes rotation single-use, including concurrent attempts.
+    # Disable ORM synchronization: SQLite returns naive datetimes for timezone columns.
     revoked = await db.execute(
         update(RefreshToken)
         .where(
@@ -218,6 +216,7 @@ async def refresh_session(
             RefreshToken.expires_at > now,
         )
         .values(revoked_at=now)
+        .execution_options(synchronize_session=False)
     )
     if revoked.rowcount != 1:
         raise HTTPException(status_code=401, detail="Refresh token has already been used")
@@ -245,6 +244,7 @@ async def logout(
                 RefreshToken.revoked_at.is_(None),
             )
             .values(revoked_at=datetime.now(timezone.utc))
+            .execution_options(synchronize_session=False)
         )
     _clear_auth_cookies(response)
     return {"detail": "Logged out"}
@@ -274,6 +274,7 @@ async def reset_user_password(
         update(RefreshToken)
         .where(RefreshToken.user_id == user_id, RefreshToken.revoked_at.is_(None))
         .values(revoked_at=datetime.now(timezone.utc))
+        .execution_options(synchronize_session=False)
     )
     await db.flush()
     return {"detail": "Password reset; existing refresh sessions have been revoked"}
