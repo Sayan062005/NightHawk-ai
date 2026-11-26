@@ -14,6 +14,11 @@ from fastapi import HTTPException, Request, status
 _BUCKETS: dict[str, deque[float]] = {}
 
 
+def reset_rate_limits() -> None:
+    """Clear in-memory buckets; intended for deterministic automated tests."""
+    _BUCKETS.clear()
+
+
 async def enforce_rate_limit(
     request: Request,
     action: str,
