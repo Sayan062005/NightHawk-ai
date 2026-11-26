@@ -58,20 +58,31 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
         secrets.token_urlsafe(32),
         max_age=settings.jwt_refresh_token_expire_days * 86400,
         httponly=False,
-        **common,
+        secure=settings.auth_cookie_secure,
+        samesite=settings.auth_cookie_samesite,
+        # The frontend runs at "/" and must be able to read this non-secret
+        # double-submit token to echo it in X-CSRF-Token.
+        path="/",
     )
 
 
 def _clear_auth_cookies(response: Response) -> None:
     settings = get_settings()
-    for cookie_name in (ACCESS_COOKIE, REFRESH_COOKIE, CSRF_COOKIE):
+    for cookie_name in (ACCESS_COOKIE, REFRESH_COOKIE):
         response.delete_cookie(
             cookie_name,
             path=COOKIE_PATH,
             secure=settings.auth_cookie_secure,
-            httponly=cookie_name != CSRF_COOKIE,
+            httponly=True,
             samesite=settings.auth_cookie_samesite,
         )
+    response.delete_cookie(
+        CSRF_COOKIE,
+        path="/",
+        secure=settings.auth_cookie_secure,
+        httponly=False,
+        samesite=settings.auth_cookie_samesite,
+    )
 
 
 async def _issue_refresh_token(db: AsyncSession, user_id: str) -> str:
