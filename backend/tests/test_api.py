@@ -67,7 +67,10 @@ class TestHealthEndpoint:
         data = response.json()
         assert data["status"] == "healthy"
         assert "version" in data
-        assert "tools_available" in data
+        assert data["database"] == "configured"
+        # Liveness must not run scanner discovery; detailed inventory is separate.
+        assert data["tools_available"] == 0
+        assert data["tools_total"] == 0
 
 
 class TestAuthEndpoints:
