@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, require_operator
+from app.api.deps import require_engagement_access, require_operator_engagement, ensure_engagement_access
 from app.core.database import get_db
 from app.core.execution import get_execution_broker
 from app.core.scope import ScopeRule, ScopeEnforcementService, build_scope_service
@@ -28,7 +28,7 @@ router = APIRouter(tags=["Scans"])
 async def create_scan(
     engagement_id: str,
     body: ScanCreate,
-    user: User = Depends(require_operator),
+    user: User = Depends(require_operator_engagement),
     db: AsyncSession = Depends(get_db),
 ):
     """Create and queue a new scan job."""
@@ -82,7 +82,7 @@ async def create_scan(
 @router.get("/engagements/{engagement_id}/scans", response_model=list[ScanResponse])
 async def list_scans(
     engagement_id: str,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_engagement_access),
     db: AsyncSession = Depends(get_db),
 ):
     """List scans for an engagement."""
@@ -99,7 +99,7 @@ async def list_scans(
 async def get_scan(
     engagement_id: str,
     scan_id: str,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_engagement_access),
     db: AsyncSession = Depends(get_db),
 ):
     """Get scan details."""
@@ -116,7 +116,7 @@ async def get_scan(
 async def cancel_scan(
     engagement_id: str,
     scan_id: str,
-    user: User = Depends(require_operator),
+    user: User = Depends(require_operator_engagement),
     db: AsyncSession = Depends(get_db),
 ):
     """Cancel a running scan."""
@@ -141,13 +141,15 @@ async def cancel_scan(
 async def check_scope(
     body: ScopeCheckRequest,
     engagement_id: str | None = None,
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_engagement_access),
     db: AsyncSession = Depends(get_db),
 ):
     """Check if a URL is within scope for an engagement."""
     if not engagement_id:
         # No engagement context — block everything
         return ScopeCheckResponse(allowed=False, reason="No engagement context provided")
+
+    await ensure_engagement_access(engagement_id, user, db)
 
     result = await db.execute(
         select(EngagementScope).where(EngagementScope.engagement_id == engagement_id)
