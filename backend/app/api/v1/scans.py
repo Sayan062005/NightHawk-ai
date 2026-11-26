@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import require_engagement_access, require_operator_engagement, ensure_engagement_access
+from app.api.deps import ensure_engagement_access, get_current_user, require_engagement_access, require_operator_engagement
 from app.core.database import get_db
 from app.core.execution import get_execution_broker
 from app.core.scope import ScopeRule, ScopeEnforcementService, build_scope_service
@@ -141,7 +141,7 @@ async def cancel_scan(
 async def check_scope(
     body: ScopeCheckRequest,
     engagement_id: str | None = None,
-    user: User = Depends(require_engagement_access),
+    user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Check if a URL is within scope for an engagement."""
