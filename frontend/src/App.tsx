@@ -649,7 +649,7 @@ export default function App() {
   }, [theme]);
 
   const handleLogout = () => {
-    void api.logout().finally(() => setUser(null));
+    void api.logout().catch(() => undefined).finally(() => setUser(null));
   };
 
   if (checking) {
