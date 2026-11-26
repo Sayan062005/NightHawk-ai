@@ -111,6 +111,42 @@ NightHawk AI includes strict ethical boundaries:
 
 ---
 
+## 🔐 Authentication & Production Security
+
+Browser sessions use short-lived JWT access cookies and rotating opaque refresh cookies. The access and refresh cookies are HttpOnly; the CSRF cookie is readable by the frontend and is echoed in the `X-CSRF-Token` header on state-changing requests. Refresh tokens are stored in the database as SHA-256 hashes, not as plaintext.
+
+### Configure authentication
+
+Generate independent secrets (run twice):
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+Set the generated values in `.env`:
+
+```env
+APP_ENV=development
+JWT_SECRET_KEY=<first-generated-secret>
+ADMIN_BOOTSTRAP_TOKEN=<second-generated-secret>
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=15
+JWT_REFRESH_TOKEN_EXPIRE_DAYS=14
+AUTH_COOKIE_SECURE=false
+AUTH_COOKIE_SAMESITE=lax
+APP_CORS_ORIGINS=["http://localhost:5173"]
+```
+
+For the first administrator, open **Create Account** and enter the `ADMIN_BOOTSTRAP_TOKEN` in the optional administrator bootstrap field. The bootstrap is single-use and protected by a database singleton claim. All ordinary registrations become **viewer** accounts. After the first administrator is created, remove `ADMIN_BOOTSTRAP_TOKEN` from the environment and restart the backend. An administrator can promote users through `PATCH /api/v1/auth/users/{user_id}/role`.
+
+For production deployments:
+- Set `APP_ENV=production`, use HTTPS, and set `AUTH_COOKIE_SECURE=true`.
+- Set `APP_CORS_ORIGINS` to the exact frontend origins; do not use wildcard origins with credentials.
+- Provide a stable `JWT_SECRET_KEY` of at least 32 bytes and keep it outside source control.
+- Use a shared Redis/API-gateway rate limiter when running multiple workers or instances. The included in-process limiter is intended for a single backend process.
+- Back up the database. The new refresh-session and admin-bootstrap tables are created at startup by the existing SQLAlchemy table initialization; use Alembic migrations for managed production schema changes.
+
+Passwords are hashed with Argon2id. Existing bcrypt hashes are verified and upgraded to Argon2id after successful login. Legacy bcrypt passwords longer than 72 UTF-8 bytes must be reset because the old bcrypt storage truncated them.
+
 ## 📄 License
 
 Distributed under the MIT License. See `LICENSE` for details.
